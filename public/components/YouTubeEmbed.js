@@ -1,16 +1,28 @@
 export class YouTubeEmbed extends HTMLElement {
+  _iframe = null;
+
   static get observedAttributes() {
     return ["data-url"];
   }
 
-  attributeChangedCallback(prop, value) {
-    if (prop === "data-url") {
-      const url = this.dataset.url;
-      const videoId = url.substring(url.indexOf("?v") + 3);
+  attributeChangedCallback(prop, oldValue, newValue) {
+    if (prop === "data-url" && newValue) {
+      const videoId = newValue.substring(newValue.indexOf("?v") + 3);
 
-      this.innerHTML = `
-                <iframe width="100%" height="300" src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-            `;
+      if (!this._iframe) {
+        this._iframe = document.createElement("iframe");
+        this._iframe.width = "100%";
+        this._iframe.height = "300";
+        this._iframe.title = "YouTube video player";
+        this._iframe.frameBorder = "0";
+        this._iframe.allow =
+          "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+        this._iframe.referrerPolicy = "strict-origin-when-cross-origin";
+        this._iframe.allowFullscreen = true;
+        this.appendChild(this._iframe);
+      }
+
+      this._iframe.src = "https://www.youtube.com/embed/" + videoId;
     }
   }
 }

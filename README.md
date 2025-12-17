@@ -18,15 +18,17 @@ Aplicativo web de listagem de vídeos em Go e Vannila Javascript para aplicaçã
 - Docker.
 
 ### Client-side
+
 - app.js - Conexão com a UI
 - services/API.js - Requisições HTTP para o backend
-- components/* - Web components
+- components/\* - Web components
 
 ### Server-side
+
 - main.go - Configuração do servidor
-- providers/*.go - Repositórios dos Models
-- handlers/*.go - API handlers
-- models/*.go - Models da aplicação
+- providers/\*.go - Repositórios dos Models
+- handlers/\*.go - API handlers
+- models/\*.go - Models da aplicação
 - logger/logger.go - Utilitario para logs da aplicação
 
 ## Como rodar
@@ -37,6 +39,7 @@ Aplicativo web de listagem de vídeos em Go e Vannila Javascript para aplicaçã
 - Docker Compose
 
 ### Passo a passo
+
 Antes de iniciar, certifique-se de que o Docker e o Docker Compose estão instalados no seu sistema.
 
 Crie um novo arquivo `.env` na raiz do projeto e copie o conteúdo do arquivo `.env.example` para ele.
@@ -58,7 +61,7 @@ Crie um novo arquivo `.env` na raiz do projeto e copie o conteúdo do arquivo `.
     ```
 
 3.  **Desenvolvimento (Live Reload)**:
-    O ambiente está configurado com `air` para *live reload*. Qualquer alteração salva nos arquivos `.go` reiniciará a aplicação automaticamente dentro do container.
+    O ambiente está configurado com `air` para _live reload_. Qualquer alteração salva nos arquivos `.go` reiniciará a aplicação automaticamente dentro do container.
 
 4.  **Parar a aplicação**:
     Para parar e remover os containers:
@@ -71,7 +74,7 @@ Crie um novo arquivo `.env` na raiz do projeto e copie o conteúdo do arquivo `.
 
 - Diagrama de Entidade-Relacionamento: [ENTITY_RELATION_DIAGRAM.MD](docs/ENTITY_RELATION_DIAGRAM.MD)
 - Diagrama de Arquitetura: [PROJECT_ARCHITECTURE_DIAGRAM.MD](docs/PROJECT_ARCHITECTURE_DIAGRAM.MD)
-
+- Guia de Performance Frontend: [FRONTEND_PERFORMANCE_GUIDE.md](docs/FRONTEND_PERFORMANCE_GUIDE.md)
 
 ## Models
 

@@ -5,20 +5,30 @@ export default class CollectionPage extends HTMLElement {
     super();
     this.endpoint = endpoint;
     this.title = title;
+    this._ulMovies = null;
   }
 
   async render() {
     const movies = await this.endpoint();
-    const ulMovies = this.querySelector("ul");
-    ulMovies.innerHTML = "";
+
+    while (this._ulMovies.firstChild) {
+      this._ulMovies.removeChild(this._ulMovies.firstChild);
+    }
+
     if (movies && movies.length > 0) {
-      movies.forEach((movie) => {
+      const fragment = document.createDocumentFragment();
+
+      for (let i = 0; i < movies.length; i++) {
         const li = document.createElement("li");
-        li.appendChild(new MovieItemComponent(movie));
-        ulMovies.appendChild(li);
-      });
+        li.appendChild(new MovieItemComponent(movies[i]));
+        fragment.appendChild(li);
+      }
+
+      this._ulMovies.appendChild(fragment);
     } else {
-      ulMovies.innerHTML = "<h3>There are no movies</h3>";
+      const emptyMessage = document.createElement("h3");
+      emptyMessage.textContent = "There are no movies";
+      this._ulMovies.appendChild(emptyMessage);
     }
   }
 
@@ -26,6 +36,8 @@ export default class CollectionPage extends HTMLElement {
     const template = document.getElementById("template-collection");
     const content = template.content.cloneNode(true);
     this.appendChild(content);
+
+    this._ulMovies = this.querySelector("ul");
 
     this.render();
   }

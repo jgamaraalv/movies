@@ -1,69 +1,109 @@
 import { API } from "../services/API.js";
 
 export default class MovieDetailsPage extends HTMLElement {
-  id = null;
-  movie = null;
+  _movieId = null;
+  _movie = null;
 
   async render() {
     try {
-      this.movie = await API.getMovieById(this.id);
+      this._movie = await API.getMovieById(this._movieId);
     } catch {
       return;
     }
+
     const template = document.getElementById("template-movie-details");
     const content = template.content.cloneNode(true);
+
+    content.querySelector("h2").textContent = this._movie.title;
+    content.querySelector("h3").textContent = this._movie.tagline;
+    content.querySelector("img").src = this._movie.poster_url;
+    content.querySelector("#trailer").dataset.url = this._movie.trailer_url;
+    content.querySelector("#overview").textContent = this._movie.overview;
+
+    this._renderMetadata(content.querySelector("#metadata"));
+    this._renderGenres(content.querySelector("#genres"));
+    this._renderCast(content.querySelector("#cast"));
+    this._bindActions(content);
+
     this.appendChild(content);
-    this.querySelector("h2").textContent = this.movie.title;
-    this.querySelector("h3").textContent = this.movie.tagline;
-    this.querySelector("img").src = this.movie.poster_url;
-    this.querySelector("#trailer").dataset.url = this.movie.trailer_url;
-    this.querySelector("#overview").textContent = this.movie.overview;
-    this.querySelector("#metadata").innerHTML = `
-            <dt>Release Year</dt>
-            <dd>${this.movie.release_year}</dd>
-            <dt>Score</dt>
-            <dd>${this.movie.score} / 10</dd>
-            <dt>Popularity</dt>
-            <dd>${this.movie.popularity}</dd>
-        `;
-    const ulGenres = this.querySelector("#genres");
-    ulGenres.innerHTML = "";
-    this.movie.genres.forEach((genre) => {
-      const li = document.createElement("li");
-      li.textContent = genre.name;
-      ulGenres.appendChild(li);
-    });
+  }
 
-    this.querySelector("#actions #btnFavorites").addEventListener(
-      "click",
-      () => {
-        app.saveToCollection(this.movie.id, "favorite");
-      }
-    );
-    this.querySelector("#actions #btnWatchlist").addEventListener(
-      "click",
-      () => {
-        app.saveToCollection(this.movie.id, "watchlist");
-      }
-    );
+  _renderMetadata(dl) {
+    const fragment = document.createDocumentFragment();
+    const metadata = [
+      ["Release Year", this._movie.release_year],
+      ["Score", `${this._movie.score} / 10`],
+      ["Popularity", this._movie.popularity],
+    ];
 
-    const ulCast = this.querySelector("#cast");
-    ulCast.innerHTML = "";
-    this.movie.casting.forEach((actor) => {
+    for (let i = 0; i < metadata.length; i++) {
+      const dt = document.createElement("dt");
+      dt.textContent = metadata[i][0];
+      const dd = document.createElement("dd");
+      dd.textContent = metadata[i][1];
+      fragment.appendChild(dt);
+      fragment.appendChild(dd);
+    }
+
+    dl.appendChild(fragment);
+  }
+
+  _renderGenres(ul) {
+    const genres = this._movie.genres;
+    const fragment = document.createDocumentFragment();
+
+    for (let i = 0; i < genres.length; i++) {
       const li = document.createElement("li");
-      li.innerHTML = `
-                <img src="${
-                  actor.image_url ?? "/images/generic_actor.jpg"
-                }" alt="Picture of ${actor.last_name}">
-                <p>${actor.first_name} ${actor.last_name}</p>
-            `;
-      ulCast.appendChild(li);
+      li.textContent = genres[i].name;
+      fragment.appendChild(li);
+    }
+
+    ul.appendChild(fragment);
+  }
+
+  _renderCast(ul) {
+    const casting = this._movie.casting;
+    const fragment = document.createDocumentFragment();
+
+    for (let i = 0; i < casting.length; i++) {
+      const actor = casting[i];
+      const li = document.createElement("li");
+
+      const img = document.createElement("img");
+      img.src = actor.image_url ?? "/images/generic_actor.jpg";
+      img.alt = `Picture of ${actor.last_name}`;
+
+      const p = document.createElement("p");
+      p.textContent = `${actor.first_name} ${actor.last_name}`;
+
+      li.appendChild(img);
+      li.appendChild(p);
+      fragment.appendChild(li);
+    }
+
+    ul.appendChild(fragment);
+  }
+
+  _bindActions(content) {
+    const movieId = this._movie.id;
+    const actionsContainer = content.querySelector("#actions");
+
+    actionsContainer.addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+
+      if (btn.id === "btnFavorites") {
+        app.saveToCollection(movieId, "favorite");
+      } else if (btn.id === "btnWatchlist") {
+        app.saveToCollection(movieId, "watchlist");
+      }
     });
   }
 
   connectedCallback() {
-    this.id = this.params[0];
+    this._movieId = this.params[0];
     this.render();
   }
 }
+
 customElements.define("movie-details-page", MovieDetailsPage);
