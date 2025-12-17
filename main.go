@@ -1,13 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"os"
-	"database/sql"
 
-	_ "github.com/lib/pq"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 
 	"github.com/jgamaraalv/movies.git/handlers"
 	"github.com/jgamaraalv/movies.git/logger"
@@ -22,7 +22,7 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Printf("No .env file found or failed to load: %v", err)
 	}
-	
+
 	// Database connection
 	dbConnStr := os.Getenv("DATABASE_URL")
 	if dbConnStr == "" {
@@ -43,7 +43,7 @@ func main() {
 	}
 
 	// Movie Handler Initializer
-	movieHandler := handlers.NewMovieHandler(movieRepo, logInstance)	
+	movieHandler := handlers.NewMovieHandler(movieRepo, logInstance)
 
 	// Set up routes
 	http.HandleFunc("/api/movies/top", movieHandler.GetTopMovies)
@@ -51,6 +51,14 @@ func main() {
 	http.HandleFunc("/api/movies/search", movieHandler.SearchMovies)
 	http.HandleFunc("/api/movies/", movieHandler.GetMovie)
 	http.HandleFunc("/api/genres", movieHandler.GetGenres)
+
+	// Handler for client SPA
+	catchAllHandler := func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./public/index.html")
+	}
+	http.HandleFunc("/movies", catchAllHandler)
+	http.HandleFunc("/movies/", catchAllHandler)
+	http.HandleFunc("/account/", catchAllHandler)
 
 	// Handler for static files (frontend)
 	http.Handle("/", http.FileServer(http.Dir("public")))
