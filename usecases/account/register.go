@@ -1,8 +1,7 @@
 package account
 
 import (
-	"errors"
-
+	"github.com/jgamaraalv/movies.git/domain/entity"
 	"github.com/jgamaraalv/movies.git/domain/repository"
 	"github.com/jgamaraalv/movies.git/domain/valueobject"
 	"github.com/jgamaraalv/movies.git/logger"
@@ -35,10 +34,6 @@ func NewRegisterUseCase(repo repository.UserRepository, log *logger.Logger) *Reg
 }
 
 func (uc *RegisterUseCase) Execute(input RegisterInput) (*RegisterOutput, error) {
-	if input.Name == "" {
-		return nil, errors.New("name is required")
-	}
-
 	email, err := valueobject.NewEmail(input.Email)
 	if err != nil {
 		return nil, err
@@ -49,23 +44,29 @@ func (uc *RegisterUseCase) Execute(input RegisterInput) (*RegisterOutput, error)
 		return nil, err
 	}
 
-	hashedPassword, err := password.Hash()
+	// Use domain entity to validate and create user
+	user, err := entity.NewUser(input.Name, email, password)
 	if err != nil {
-		uc.logger.Error("Failed to hash password", err)
-		return nil, errors.New("failed to process password")
+		return nil, err
 	}
 
-	success, err := uc.userRepo.Register(input.Name, email.String(), hashedPassword)
+	hashedPassword, err := user.Password().Hash()
+	if err != nil {
+		uc.logger.Error("Failed to hash password", err)
+		return nil, valueobject.ErrPasswordMismatch
+	}
+
+	success, err := uc.userRepo.Register(user.Name(), user.EmailString(), hashedPassword)
 	if err != nil {
 		return nil, err
 	}
 
 	jwt := token.CreateJWT(
-		models.User{Email: email.String(), Name: input.Name},
+		models.User{Email: user.EmailString(), Name: user.Name()},
 		*uc.logger,
 	)
 
-	uc.logger.Info("User registered successfully: " + email.String())
+	uc.logger.Info("User registered successfully: " + user.EmailString())
 
 	return &RegisterOutput{
 		Success: success,
