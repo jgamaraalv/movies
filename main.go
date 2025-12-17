@@ -4,12 +4,15 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/jgamaraalv/movies.git/handlers"
 	"github.com/jgamaraalv/movies.git/logger"
 )
 
 func main() {
 	logInstance := initializeLogger()
+	movieHandler := handlers.NewMovieHandler(logInstance)
 
+	http.HandleFunc("/api/movies/top", movieHandler.GetTopMovies)
 	http.Handle("/", http.FileServer(http.Dir("public")))
 
 	const addr = ":8080"
