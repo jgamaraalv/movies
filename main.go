@@ -43,10 +43,16 @@ func main() {
 	}
 
 	// Movie Handler Initializer
-movieHandler := handlers.NewMovieHandler(movieRepo, logInstance)	
+	movieHandler := handlers.NewMovieHandler(movieRepo, logInstance)	
+
+	// Set up routes
+	http.HandleFunc("/api/movies/top", movieHandler.GetTopMovies)
+	http.HandleFunc("/api/movies/random", movieHandler.GetRandomMovies)
+	http.HandleFunc("/api/movies/search", movieHandler.SearchMovies)
+	http.HandleFunc("/api/movies", movieHandler.GetMovie)
+	http.HandleFunc("/api/genres", movieHandler.GetGenres)
 
 	// Handler for static files (frontend)
-	http.HandleFunc("/api/movies/top", movieHandler.GetTopMovies)
 	http.Handle("/", http.FileServer(http.Dir("public")))
 
 	const addr = ":8080"
