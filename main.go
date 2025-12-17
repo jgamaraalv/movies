@@ -3,15 +3,42 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
+	"database/sql"
+
+	_ "github.com/lib/pq"
+	"github.com/joho/godotenv"
 
 	"github.com/jgamaraalv/movies.git/handlers"
 	"github.com/jgamaraalv/movies.git/logger"
 )
 
 func main() {
+	// Log Initializer
 	logInstance := initializeLogger()
+
+	// Environment Variables
+	if err := godotenv.Load(); err != nil {
+		log.Printf("No .env file found or failed to load: %v", err)
+	}
+	
+	// Database connection
+	dbConnStr := os.Getenv("DATABASE_URL")
+	if dbConnStr == "" {
+		log.Fatalf("DATABASE_URL not set in environment")
+	}
+
+	db, err := sql.Open("postgres", dbConnStr)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	defer db.Close()
+
+	// Movie Handler Initializer
 	movieHandler := handlers.NewMovieHandler(logInstance)
 
+	// Handler for static files (frontend)
 	http.HandleFunc("/api/movies/top", movieHandler.GetTopMovies)
 	http.Handle("/", http.FileServer(http.Dir("public")))
 

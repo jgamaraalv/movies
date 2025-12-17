@@ -3,17 +3,30 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"io/ioutil"
-	"log"
-	"strings"
+	"io/ioutil"	
+	"log"		
+	"os"
+	"strings"	
 
 	_ "github.com/lib/pq"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	connStr := "postgres://postgres:password@127.0.0.1:5432/movies?sslmode=disable"
+	// Environment Variables
+	if err := godotenv.Load(); err != nil {
+		if err := godotenv.Load("../../.env"); err != nil {
+			log.Printf("No .env file found or failed to load: %v", err)
+		}
+	}
+	
+	// Database connection
+	dbConnStr := os.Getenv("DATABASE_URL")
+	if dbConnStr == "" {
+		log.Fatalf("DATABASE_URL not set in environment")
+	}
 
-	db, err := sql.Open("postgres", connStr)
+	db, err := sql.Open("postgres", dbConnStr)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
@@ -24,9 +37,13 @@ func main() {
 	}
 
 	sqlFilePath := "database/import/database-dump.sql"
+	if _, err := os.Stat(sqlFilePath); os.IsNotExist(err) {
+		sqlFilePath = "database-dump.sql"
+	}
+
 	sqlContent, err := ioutil.ReadFile(sqlFilePath)
 	if err != nil {
-		log.Fatal("Failed to read SQL file:", err)
+		log.Fatalf("Failed to read SQL file %s: %v", sqlFilePath, err)
 	}
 
 	statements := strings.Split(string(sqlContent), ";\n")
