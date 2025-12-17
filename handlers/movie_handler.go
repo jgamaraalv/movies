@@ -6,13 +6,28 @@ import (
 	"strconv"
 
 	"github.com/jgamaraalv/movies.git/logger"
-	"github.com/jgamaraalv/movies.git/models"
 	"github.com/jgamaraalv/movies.git/providers"
+	"github.com/jgamaraalv/movies.git/usecases/movie"
 )
 
 type MovieHandler struct {
-	storage providers.MovieStorage
-	logger  *logger.Logger
+	getTopMoviesUC    *movie.GetTopMoviesUseCase
+	getRandomMoviesUC *movie.GetRandomMoviesUseCase
+	searchMoviesUC    *movie.SearchMoviesUseCase
+	getMovieByIDUC    *movie.GetMovieByIDUseCase
+	getGenresUC       *movie.GetGenresUseCase
+	logger            *logger.Logger
+}
+
+func NewMovieHandler(storage providers.MovieStorage, log *logger.Logger) *MovieHandler {
+	return &MovieHandler{
+		getTopMoviesUC:    movie.NewGetTopMoviesUseCase(storage, log),
+		getRandomMoviesUC: movie.NewGetRandomMoviesUseCase(storage, log),
+		searchMoviesUC:    movie.NewSearchMoviesUseCase(storage, log),
+		getMovieByIDUC:    movie.NewGetMovieByIDUseCase(storage, log),
+		getGenresUC:       movie.NewGetGenresUseCase(storage, log),
+		logger:            log,
+	}
 }
 
 func (h *MovieHandler) writeJSONResponse(w http.ResponseWriter, data interface{}) error {
@@ -25,7 +40,7 @@ func (h *MovieHandler) writeJSONResponse(w http.ResponseWriter, data interface{}
 	return nil
 }
 
-func (h *MovieHandler) handleStorageError(w http.ResponseWriter, err error, context string) bool {
+func (h *MovieHandler) handleError(w http.ResponseWriter, err error, context string) bool {
 	if err != nil {
 		if err == providers.ErrMovieNotFound {
 			http.Error(w, context, http.StatusNotFound)
@@ -49,24 +64,19 @@ func (h *MovieHandler) parseID(w http.ResponseWriter, idStr string) (int, bool) 
 }
 
 func (h *MovieHandler) GetTopMovies(w http.ResponseWriter, r *http.Request) {
-	movies, err := h.storage.GetTopMovies()
-
-	if h.handleStorageError(w, err, "Failed to get movies") {
+	output, err := h.getTopMoviesUC.Execute()
+	if h.handleError(w, err, "Failed to get top movies") {
 		return
 	}
-	if h.writeJSONResponse(w, movies) == nil {
-		h.logger.Info("Successfully served top movies")
-	}
+	h.writeJSONResponse(w, output.Movies)
 }
 
 func (h *MovieHandler) GetRandomMovies(w http.ResponseWriter, r *http.Request) {
-	movies, err := h.storage.GetRandomMovies()
-	if h.handleStorageError(w, err, "Failed to get movies") {
+	output, err := h.getRandomMoviesUC.Execute()
+	if h.handleError(w, err, "Failed to get random movies") {
 		return
 	}
-	if h.writeJSONResponse(w, movies) == nil {
-		h.logger.Info("Successfully served random movies")
-	}
+	h.writeJSONResponse(w, output.Movies)
 }
 
 func (h *MovieHandler) SearchMovies(w http.ResponseWriter, r *http.Request) {
@@ -83,17 +93,19 @@ func (h *MovieHandler) SearchMovies(w http.ResponseWriter, r *http.Request) {
 		genre = &genreInt
 	}
 
-	var movies []models.Movie
-	var err error
-	if query != "" {
-		movies, err = h.storage.SearchMoviesByName(query, order, genre)
+	input := movie.SearchMoviesInput{
+		Query: query,
+		Order: order,
+		Genre: genre,
 	}
-	if h.handleStorageError(w, err, "Failed to get movies") {
+
+	output, err := h.searchMoviesUC.Execute(input)
+	if err != nil {
+		// Return empty array for invalid search (e.g., empty query)
+		h.writeJSONResponse(w, []interface{}{})
 		return
 	}
-	if h.writeJSONResponse(w, movies) == nil {
-		h.logger.Info("Successfully served movies")
-	}
+	h.writeJSONResponse(w, output.Movies)
 }
 
 func (h *MovieHandler) GetMovie(w http.ResponseWriter, r *http.Request) {
@@ -103,29 +115,18 @@ func (h *MovieHandler) GetMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	movie, err := h.storage.GetMovieByID(id)
-	if h.handleStorageError(w, err, "Failed to get movie by ID") {
+	input := movie.GetMovieByIDInput{ID: id}
+	output, err := h.getMovieByIDUC.Execute(input)
+	if h.handleError(w, err, "Failed to get movie by ID") {
 		return
 	}
-	if h.writeJSONResponse(w, movie) == nil {
-		h.logger.Info("Successfully served movie with ID: " + idStr)
-	}
+	h.writeJSONResponse(w, output.Movie)
 }
 
 func (h *MovieHandler) GetGenres(w http.ResponseWriter, r *http.Request) {
-	genres, err := h.storage.GetAllGenres()
-	if h.handleStorageError(w, err, "Failed to get genres") {
+	output, err := h.getGenresUC.Execute()
+	if h.handleError(w, err, "Failed to get genres") {
 		return
 	}
-	if h.writeJSONResponse(w, genres) == nil {
-		h.logger.Info("Successfully served genres")
-	}
-}
-
-
-func NewMovieHandler(storage providers.MovieStorage, log *logger.Logger) *MovieHandler {
-	return &MovieHandler{
-		storage: storage,
-		logger: log,
-	}
+	h.writeJSONResponse(w, output.Genres)
 }
