@@ -14,7 +14,20 @@ Aplicativo web de listagem de vídeos em Go e Vannila Javascript para aplicaçã
 
 - Go 1.20+ (HTTP server/backend);
 - Vanilla Javascript (client/frontend);
-- PostgreSQL
+- PostgreSQL;
+- Docker.
+
+### Client-side
+- app.js - Conexão com a UI
+- services/API.js - Requisições HTTP para o backend
+- components/* - Web components
+
+### Server-side
+- main.go - Configuração do servidor
+- providers/*.go - Repositórios dos Models
+- handlers/*.go - API handlers
+- models/*.go - Models da aplicação
+- logger/logger.go - Utilitario para logs da aplicação
 
 ## Como rodar
 
@@ -57,6 +70,7 @@ Crie um novo arquivo `.env` na raiz do projeto e copie o conteúdo do arquivo `.
 ## Documentação
 
 - Diagrama de Entidade-Relacionamento: [ENTITY_RELATION_DIAGRAM.MD](docs/ENTITY_RELATION_DIAGRAM.MD)
+
 
 ## Models
 
