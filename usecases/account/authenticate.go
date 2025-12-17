@@ -1,11 +1,10 @@
 package account
 
 import (
-	"errors"
-
+	"github.com/jgamaraalv/movies.git/domain/repository"
+	"github.com/jgamaraalv/movies.git/domain/valueobject"
 	"github.com/jgamaraalv/movies.git/logger"
 	"github.com/jgamaraalv/movies.git/models"
-	"github.com/jgamaraalv/movies.git/providers"
 	"github.com/jgamaraalv/movies.git/token"
 )
 
@@ -21,47 +20,42 @@ type AuthenticateOutput struct {
 }
 
 type AuthenticateUseCase struct {
-	accountStorage providers.AccountStorage
-	logger         *logger.Logger
+	userRepo repository.UserRepository
+	logger   *logger.Logger
 }
 
-func NewAuthenticateUseCase(storage providers.AccountStorage, log *logger.Logger) *AuthenticateUseCase {
+func NewAuthenticateUseCase(repo repository.UserRepository, log *logger.Logger) *AuthenticateUseCase {
 	return &AuthenticateUseCase{
-		accountStorage: storage,
-		logger:         log,
+		userRepo: repo,
+		logger:   log,
 	}
 }
 
 func (uc *AuthenticateUseCase) Execute(input AuthenticateInput) (*AuthenticateOutput, error) {
-	if err := uc.validateInput(input); err != nil {
+	email, err := valueobject.NewEmail(input.Email)
+	if err != nil {
 		return nil, err
 	}
 
-	success, err := uc.accountStorage.Authenticate(input.Email, input.Password)
+	if input.Password == "" {
+		return nil, valueobject.ErrEmptyPassword
+	}
+
+	success, err := uc.userRepo.Authenticate(email.String(), input.Password)
 	if err != nil {
 		return nil, err
 	}
 
 	jwt := token.CreateJWT(
-		models.User{Email: input.Email},
+		models.User{Email: email.String()},
 		*uc.logger,
 	)
 
-	uc.logger.Info("User authenticated successfully: " + input.Email)
+	uc.logger.Info("User authenticated successfully: " + email.String())
 
 	return &AuthenticateOutput{
 		Success: success,
 		Message: "User authenticated successfully",
 		JWT:     jwt,
 	}, nil
-}
-
-func (uc *AuthenticateUseCase) validateInput(input AuthenticateInput) error {
-	if input.Email == "" {
-		return errors.New("email is required")
-	}
-	if input.Password == "" {
-		return errors.New("password is required")
-	}
-	return nil
 }

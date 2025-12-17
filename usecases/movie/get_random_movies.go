@@ -1,9 +1,9 @@
 package movie
 
 import (
+	"github.com/jgamaraalv/movies.git/domain/repository"
 	"github.com/jgamaraalv/movies.git/logger"
 	"github.com/jgamaraalv/movies.git/models"
-	"github.com/jgamaraalv/movies.git/providers"
 )
 
 type GetRandomMoviesOutput struct {
@@ -11,19 +11,19 @@ type GetRandomMoviesOutput struct {
 }
 
 type GetRandomMoviesUseCase struct {
-	movieStorage providers.MovieStorage
-	logger       *logger.Logger
+	movieRepo repository.MovieRepository
+	logger    *logger.Logger
 }
 
-func NewGetRandomMoviesUseCase(storage providers.MovieStorage, log *logger.Logger) *GetRandomMoviesUseCase {
+func NewGetRandomMoviesUseCase(repo repository.MovieRepository, log *logger.Logger) *GetRandomMoviesUseCase {
 	return &GetRandomMoviesUseCase{
-		movieStorage: storage,
-		logger:       log,
+		movieRepo: repo,
+		logger:    log,
 	}
 }
 
 func (uc *GetRandomMoviesUseCase) Execute() (*GetRandomMoviesOutput, error) {
-	movies, err := uc.movieStorage.GetRandomMovies()
+	movies, err := uc.movieRepo.GetRandomMovies()
 	if err != nil {
 		uc.logger.Error("Failed to get random movies", err)
 		return nil, err

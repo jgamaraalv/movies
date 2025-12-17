@@ -1,11 +1,10 @@
 package account
 
 import (
-	"errors"
-
+	"github.com/jgamaraalv/movies.git/domain/repository"
+	"github.com/jgamaraalv/movies.git/domain/valueobject"
 	"github.com/jgamaraalv/movies.git/logger"
 	"github.com/jgamaraalv/movies.git/models"
-	"github.com/jgamaraalv/movies.git/providers"
 )
 
 type GetWatchlistInput struct {
@@ -17,29 +16,30 @@ type GetWatchlistOutput struct {
 }
 
 type GetWatchlistUseCase struct {
-	accountStorage providers.AccountStorage
-	logger         *logger.Logger
+	userRepo repository.UserRepository
+	logger   *logger.Logger
 }
 
-func NewGetWatchlistUseCase(storage providers.AccountStorage, log *logger.Logger) *GetWatchlistUseCase {
+func NewGetWatchlistUseCase(repo repository.UserRepository, log *logger.Logger) *GetWatchlistUseCase {
 	return &GetWatchlistUseCase{
-		accountStorage: storage,
-		logger:         log,
+		userRepo: repo,
+		logger:   log,
 	}
 }
 
 func (uc *GetWatchlistUseCase) Execute(input GetWatchlistInput) (*GetWatchlistOutput, error) {
-	if input.Email == "" {
-		return nil, errors.New("email is required")
+	email, err := valueobject.NewEmail(input.Email)
+	if err != nil {
+		return nil, err
 	}
 
-	user, err := uc.accountStorage.GetAccountDetails(input.Email)
+	user, err := uc.userRepo.GetAccountDetails(email.String())
 	if err != nil {
 		uc.logger.Error("Failed to get user watchlist", err)
 		return nil, err
 	}
 
-	uc.logger.Info("Successfully retrieved watchlist for: " + input.Email)
+	uc.logger.Info("Successfully retrieved watchlist for: " + email.String())
 
 	return &GetWatchlistOutput{
 		Watchlist: user.Watchlist,

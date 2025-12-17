@@ -1,11 +1,10 @@
 package account
 
 import (
-	"errors"
-
+	"github.com/jgamaraalv/movies.git/domain/repository"
+	"github.com/jgamaraalv/movies.git/domain/valueobject"
 	"github.com/jgamaraalv/movies.git/logger"
 	"github.com/jgamaraalv/movies.git/models"
-	"github.com/jgamaraalv/movies.git/providers"
 )
 
 type GetFavoritesInput struct {
@@ -17,29 +16,30 @@ type GetFavoritesOutput struct {
 }
 
 type GetFavoritesUseCase struct {
-	accountStorage providers.AccountStorage
-	logger         *logger.Logger
+	userRepo repository.UserRepository
+	logger   *logger.Logger
 }
 
-func NewGetFavoritesUseCase(storage providers.AccountStorage, log *logger.Logger) *GetFavoritesUseCase {
+func NewGetFavoritesUseCase(repo repository.UserRepository, log *logger.Logger) *GetFavoritesUseCase {
 	return &GetFavoritesUseCase{
-		accountStorage: storage,
-		logger:         log,
+		userRepo: repo,
+		logger:   log,
 	}
 }
 
 func (uc *GetFavoritesUseCase) Execute(input GetFavoritesInput) (*GetFavoritesOutput, error) {
-	if input.Email == "" {
-		return nil, errors.New("email is required")
+	email, err := valueobject.NewEmail(input.Email)
+	if err != nil {
+		return nil, err
 	}
 
-	user, err := uc.accountStorage.GetAccountDetails(input.Email)
+	user, err := uc.userRepo.GetAccountDetails(email.String())
 	if err != nil {
 		uc.logger.Error("Failed to get user favorites", err)
 		return nil, err
 	}
 
-	uc.logger.Info("Successfully retrieved favorites for: " + input.Email)
+	uc.logger.Info("Successfully retrieved favorites for: " + email.String())
 
 	return &GetFavoritesOutput{
 		Favorites: user.Favorites,

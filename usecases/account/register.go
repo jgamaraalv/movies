@@ -3,9 +3,10 @@ package account
 import (
 	"errors"
 
+	"github.com/jgamaraalv/movies.git/domain/repository"
+	"github.com/jgamaraalv/movies.git/domain/valueobject"
 	"github.com/jgamaraalv/movies.git/logger"
 	"github.com/jgamaraalv/movies.git/models"
-	"github.com/jgamaraalv/movies.git/providers"
 	"github.com/jgamaraalv/movies.git/token"
 )
 
@@ -22,53 +23,53 @@ type RegisterOutput struct {
 }
 
 type RegisterUseCase struct {
-	accountStorage providers.AccountStorage
-	logger         *logger.Logger
+	userRepo repository.UserRepository
+	logger   *logger.Logger
 }
 
-func NewRegisterUseCase(storage providers.AccountStorage, log *logger.Logger) *RegisterUseCase {
+func NewRegisterUseCase(repo repository.UserRepository, log *logger.Logger) *RegisterUseCase {
 	return &RegisterUseCase{
-		accountStorage: storage,
-		logger:         log,
+		userRepo: repo,
+		logger:   log,
 	}
 }
 
 func (uc *RegisterUseCase) Execute(input RegisterInput) (*RegisterOutput, error) {
-	if err := uc.validateInput(input); err != nil {
+	if input.Name == "" {
+		return nil, errors.New("name is required")
+	}
+
+	email, err := valueobject.NewEmail(input.Email)
+	if err != nil {
 		return nil, err
 	}
 
-	success, err := uc.accountStorage.Register(input.Name, input.Email, input.Password)
+	password, err := valueobject.NewPassword(input.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	hashedPassword, err := password.Hash()
+	if err != nil {
+		uc.logger.Error("Failed to hash password", err)
+		return nil, errors.New("failed to process password")
+	}
+
+	success, err := uc.userRepo.Register(input.Name, email.String(), hashedPassword)
 	if err != nil {
 		return nil, err
 	}
 
 	jwt := token.CreateJWT(
-		models.User{Email: input.Email, Name: input.Name},
+		models.User{Email: email.String(), Name: input.Name},
 		*uc.logger,
 	)
 
-	uc.logger.Info("User registered successfully: " + input.Email)
+	uc.logger.Info("User registered successfully: " + email.String())
 
 	return &RegisterOutput{
 		Success: success,
 		Message: "User registered successfully",
 		JWT:     jwt,
 	}, nil
-}
-
-func (uc *RegisterUseCase) validateInput(input RegisterInput) error {
-	if input.Name == "" {
-		return errors.New("name is required")
-	}
-	if input.Email == "" {
-		return errors.New("email is required")
-	}
-	if input.Password == "" {
-		return errors.New("password is required")
-	}
-	if len(input.Password) < 6 {
-		return errors.New("password must be at least 6 characters")
-	}
-	return nil
 }

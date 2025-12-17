@@ -4,9 +4,9 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/jgamaraalv/movies.git/domain/repository"
 	"github.com/jgamaraalv/movies.git/logger"
 	"github.com/jgamaraalv/movies.git/models"
-	"github.com/jgamaraalv/movies.git/providers"
 )
 
 type GetMovieByIDInput struct {
@@ -18,14 +18,14 @@ type GetMovieByIDOutput struct {
 }
 
 type GetMovieByIDUseCase struct {
-	movieStorage providers.MovieStorage
-	logger       *logger.Logger
+	movieRepo repository.MovieRepository
+	logger    *logger.Logger
 }
 
-func NewGetMovieByIDUseCase(storage providers.MovieStorage, log *logger.Logger) *GetMovieByIDUseCase {
+func NewGetMovieByIDUseCase(repo repository.MovieRepository, log *logger.Logger) *GetMovieByIDUseCase {
 	return &GetMovieByIDUseCase{
-		movieStorage: storage,
-		logger:       log,
+		movieRepo: repo,
+		logger:    log,
 	}
 }
 
@@ -34,7 +34,7 @@ func (uc *GetMovieByIDUseCase) Execute(input GetMovieByIDInput) (*GetMovieByIDOu
 		return nil, errors.New("invalid movie ID")
 	}
 
-	movie, err := uc.movieStorage.GetMovieByID(input.ID)
+	movie, err := uc.movieRepo.GetMovieByID(input.ID)
 	if err != nil {
 		uc.logger.Error("Failed to get movie by ID: "+strconv.Itoa(input.ID), err)
 		return nil, err

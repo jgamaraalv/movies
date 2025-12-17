@@ -2,9 +2,9 @@ package providers
 
 import (
 	"database/sql"
-	"errors"
 	"time"
 
+	"github.com/jgamaraalv/movies.git/domain/repository"
 	"github.com/jgamaraalv/movies.git/logger"
 	"github.com/jgamaraalv/movies.git/models"
 	"golang.org/x/crypto/bcrypt"
@@ -22,14 +22,7 @@ func NewAccountRepository(db *sql.DB, log *logger.Logger) (*AccountRepository, e
 	}, nil
 }
 
-func (r *AccountRepository) Register(name, email, password string) (bool, error) {
-	// Validate basic requirements
-	if name == "" || email == "" || password == "" {
-		r.logger.Error("Registration validation failed: missing required fields", nil)
-		return false, ErrRegistrationValidation
-	}
-
-	// Check if user already exists
+func (r *AccountRepository) Register(name, email, hashedPassword string) (bool, error) {
 	var exists bool
 	err := r.db.QueryRow(`
 		SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)
@@ -39,18 +32,10 @@ func (r *AccountRepository) Register(name, email, password string) (bool, error)
 		return false, err
 	}
 	if exists {
-		r.logger.Error("User already exists with email: "+email, ErrUserAlreadyExists)
-		return false, ErrUserAlreadyExists
+		r.logger.Error("User already exists with email: "+email, repository.ErrUserAlreadyExists)
+		return false, repository.ErrUserAlreadyExists
 	}
 
-	// Hash the password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		r.logger.Error("Failed to hash password", err)
-		return false, err
-	}
-
-	// Insert new user
 	query := `
 		INSERT INTO users (name, email, password_hashed, time_created)
 		VALUES ($1, $2, $3, $4)
@@ -61,7 +46,7 @@ func (r *AccountRepository) Register(name, email, password string) (bool, error)
 		query,
 		name,
 		email,
-		string(hashedPassword),
+		hashedPassword,
 		time.Now(),
 	).Scan(&userID)
 	if err != nil {
@@ -73,12 +58,6 @@ func (r *AccountRepository) Register(name, email, password string) (bool, error)
 }
 
 func (r *AccountRepository) Authenticate(email string, password string) (bool, error) {
-	if email == "" || password == "" {
-		r.logger.Error("Authentication validation failed: missing credentials", nil)
-		return false, ErrAuthenticationValidation
-	}
-
-	// Fetch user by email
 	var user models.User
 	query := `
 		SELECT id, name, email, password_hashed
@@ -93,21 +72,19 @@ func (r *AccountRepository) Authenticate(email string, password string) (bool, e
 	)
 	if err == sql.ErrNoRows {
 		r.logger.Error("User not found for email: "+email, nil)
-		return false, ErrAuthenticationValidation
+		return false, repository.ErrAuthenticationValidation
 	}
 	if err != nil {
 		r.logger.Error("Failed to query user for authentication", err)
 		return false, err
 	}
 
-	// Verify password
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
 		r.logger.Error("Password mismatch for email: "+email, nil)
-		return false, ErrAuthenticationValidation
+		return false, repository.ErrAuthenticationValidation
 	}
 
-	// Update last login time
 	updateQuery := `
 		UPDATE users 
 		SET last_login = $1
@@ -116,7 +93,6 @@ func (r *AccountRepository) Authenticate(email string, password string) (bool, e
 	_, err = r.db.Exec(updateQuery, time.Now(), user.ID)
 	if err != nil {
 		r.logger.Error("Failed to update last login", err)
-		// Don't fail authentication just because last login update failed
 	}
 
 	return true, nil
@@ -136,14 +112,13 @@ func (r *AccountRepository) GetAccountDetails(email string) (models.User, error)
 	)
 	if err == sql.ErrNoRows {
 		r.logger.Error("User not found for email: "+email, nil)
-		return models.User{}, ErrUserNotFound
+		return models.User{}, repository.ErrUserNotFound
 	}
 	if err != nil {
 		r.logger.Error("Failed to query user by email", err)
 		return models.User{}, err
 	}
 
-	// Fetch favorites
 	favoritesQuery := `
 		SELECT m.id, m.tmdb_id, m.title, m.tagline, m.release_year, 
 		       m.overview, m.score, m.popularity, m.language, 
@@ -172,7 +147,6 @@ func (r *AccountRepository) GetAccountDetails(email string) (models.User, error)
 		user.Favorites = append(user.Favorites, m)
 	}
 
-	// Fetch watchlist
 	watchlistQuery := `
 		SELECT m.id, m.tmdb_id, m.title, m.tagline, m.release_year, 
 		       m.overview, m.score, m.popularity, m.language, 
@@ -205,17 +179,6 @@ func (r *AccountRepository) GetAccountDetails(email string) (models.User, error)
 }
 
 func (r *AccountRepository) SaveCollection(user models.User, movieID int, collection string) (bool, error) {
-	// Validate inputs
-	if movieID <= 0 {
-		r.logger.Error("SaveCollection failed: invalid movie ID", nil)
-		return false, errors.New("invalid movie ID")
-	}
-	if collection != "favorite" && collection != "watchlist" {
-		r.logger.Error("SaveCollection failed: invalid collection type", nil)
-		return false, errors.New("collection must be 'favorite' or 'watchlist'")
-	}
-
-	// Get user ID from email
 	var userID int
 	err := r.db.QueryRow(`
 		SELECT id 
@@ -224,14 +187,13 @@ func (r *AccountRepository) SaveCollection(user models.User, movieID int, collec
 	`, user.Email).Scan(&userID)
 	if err == sql.ErrNoRows {
 		r.logger.Error("User not found", nil)
-		return false, ErrUserNotFound
+		return false, repository.ErrUserNotFound
 	}
 	if err != nil {
 		r.logger.Error("Failed to query user ID", err)
 		return false, err
 	}
 
-	// Check if the relationship already exists
 	var exists bool
 	err = r.db.QueryRow(`
 		SELECT EXISTS(
@@ -248,10 +210,9 @@ func (r *AccountRepository) SaveCollection(user models.User, movieID int, collec
 	}
 	if exists {
 		r.logger.Info("Movie already in " + collection + " for user")
-		return true, nil // Return true since the movie is already in the collection
+		return true, nil
 	}
 
-	// Insert the new relationship
 	query := `
 		INSERT INTO user_movies (user_id, movie_id, relation_type, time_added)
 		VALUES ($1, $2, $3, $4)
@@ -262,13 +223,5 @@ func (r *AccountRepository) SaveCollection(user models.User, movieID int, collec
 		return false, err
 	}
 
-	r.logger.Info("Successfully added movie " + string(movieID) + " to " + collection + " for user")
 	return true, nil
 }
-
-var (
-	ErrRegistrationValidation   = errors.New("registration failed")
-	ErrAuthenticationValidation = errors.New("authentication failed")
-	ErrUserAlreadyExists        = errors.New("user already exists")
-	ErrUserNotFound             = errors.New("user not found")
-)

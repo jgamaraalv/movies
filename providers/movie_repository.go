@@ -2,9 +2,9 @@ package providers
 
 import (
 	"database/sql"
-	"errors"
 	"strconv"
 
+	"github.com/jgamaraalv/movies.git/domain/repository"
 	"github.com/jgamaraalv/movies.git/logger"
 	"github.com/jgamaraalv/movies.git/models"
 	_ "github.com/lib/pq"
@@ -25,7 +25,6 @@ func NewMovieRepository(db *sql.DB, log *logger.Logger) (*MovieRepository, error
 const defaultLimit = 20
 
 func (r *MovieRepository) GetTopMovies() ([]models.Movie, error) {
-	// Fetch movies
 	query := `
 		SELECT id, tmdb_id, title, tagline, release_year, overview, score, 
 		       popularity, language, poster_url, trailer_url
@@ -37,7 +36,6 @@ func (r *MovieRepository) GetTopMovies() ([]models.Movie, error) {
 }
 
 func (r *MovieRepository) GetRandomMovies() ([]models.Movie, error) {
-	// Fetch movies
 	randomQuery := `
 		SELECT id, tmdb_id, title, tagline, release_year, overview, score, 
 		       popularity, language, poster_url, trailer_url
@@ -74,7 +72,6 @@ func (r *MovieRepository) getMovies(query string) ([]models.Movie, error) {
 }
 
 func (r *MovieRepository) GetMovieByID(id int) (models.Movie, error) {
-	// Fetch movie
 	query := `
 		SELECT id, tmdb_id, title, tagline, release_year, overview, score, 
 		       popularity, language, poster_url, trailer_url
@@ -90,15 +87,14 @@ func (r *MovieRepository) GetMovieByID(id int) (models.Movie, error) {
 		&m.PosterURL, &m.TrailerURL,
 	)
 	if err == sql.ErrNoRows {
-		r.logger.Error("Movie not found", ErrMovieNotFound)
-		return models.Movie{}, ErrMovieNotFound
+		r.logger.Error("Movie not found", repository.ErrMovieNotFound)
+		return models.Movie{}, repository.ErrMovieNotFound
 	}
 	if err != nil {
 		r.logger.Error("Failed to query movie by ID", err)
 		return models.Movie{}, err
 	}
 
-	// Fetch related data
 	if err := r.fetchMovieRelations(&m); err != nil {
 		return models.Movie{}, err
 	}
@@ -124,7 +120,6 @@ func (r *MovieRepository) SearchMoviesByName(name string, order string, genre *i
 								AND genre_id=` + strconv.Itoa(*genre) + `) = 1) `
 	}
 
-	// Fetch movies by name
 	query := `
 		SELECT id, tmdb_id, title, tagline, release_year, overview, score, 
 		       popularity, language, poster_url, trailer_url
@@ -178,9 +173,7 @@ func (r *MovieRepository) GetAllGenres() ([]models.Genre, error) {
 	return genres, nil
 }
 
-// fetchMovieRelations fetches genres, actors, and keywords for a movie
 func (r *MovieRepository) fetchMovieRelations(m *models.Movie) error {
-	// Fetch genres
 	genreQuery := `
 		SELECT g.id, g.name 
 		FROM genres g
@@ -202,7 +195,6 @@ func (r *MovieRepository) fetchMovieRelations(m *models.Movie) error {
 		m.Genres = append(m.Genres, g)
 	}
 
-	// Fetch actors
 	actorQuery := `
 		SELECT a.id, a.first_name, a.last_name, a.image_url
 		FROM actors a
@@ -224,7 +216,6 @@ func (r *MovieRepository) fetchMovieRelations(m *models.Movie) error {
 		m.Casting = append(m.Casting, a)
 	}
 
-	// Fetch keywords
 	keywordQuery := `
 		SELECT k.word
 		FROM keywords k
@@ -248,7 +239,3 @@ func (r *MovieRepository) fetchMovieRelations(m *models.Movie) error {
 
 	return nil
 }
-
-var (
-	ErrMovieNotFound = errors.New("movie not found")
-)

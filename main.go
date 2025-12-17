@@ -15,15 +15,12 @@ import (
 )
 
 func main() {
-	// Log Initializer
 	logInstance := initializeLogger()
 
-	// Environment Variables
 	if err := godotenv.Load(); err != nil {
 		log.Printf("No .env file found or failed to load: %v", err)
 	}
 
-	// Database connection
 	dbConnStr := os.Getenv("DATABASE_URL")
 	if dbConnStr == "" {
 		log.Fatalf("DATABASE_URL not set in environment")
@@ -36,7 +33,7 @@ func main() {
 
 	defer db.Close()
 
-	// Initialize repositories
+	// Initialize repositories (implementing domain interfaces)
 	movieRepo, err := providers.NewMovieRepository(db, logInstance)
 	if err != nil {
 		log.Fatalf("Failed to initialize movie repository: %v", err)
@@ -47,7 +44,7 @@ func main() {
 		log.Fatalf("Failed to initialize account repository: %v", err)
 	}
 
-	// Handlers Initializer
+	// Initialize handlers with domain repository interfaces
 	movieHandler := handlers.NewMovieHandler(movieRepo, logInstance)
 	accountHandler := handlers.NewAccountHandler(accountRepo, logInstance)
 
@@ -69,7 +66,6 @@ func main() {
 	http.Handle("/api/account/save-to-collection/",
 		accountHandler.AuthMiddleware(http.HandlerFunc(accountHandler.SaveToCollection)))
 
-	// Handler for client SPA
 	catchAllHandler := func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./public/index.html")
 	}
@@ -77,7 +73,6 @@ func main() {
 	http.HandleFunc("/movies/", catchAllHandler)
 	http.HandleFunc("/account/", catchAllHandler)
 
-	// Handler for static files (frontend)
 	http.Handle("/", http.FileServer(http.Dir("public")))
 
 	const addr = ":8080"

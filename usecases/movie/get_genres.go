@@ -1,9 +1,9 @@
 package movie
 
 import (
+	"github.com/jgamaraalv/movies.git/domain/repository"
 	"github.com/jgamaraalv/movies.git/logger"
 	"github.com/jgamaraalv/movies.git/models"
-	"github.com/jgamaraalv/movies.git/providers"
 )
 
 type GetGenresOutput struct {
@@ -11,19 +11,19 @@ type GetGenresOutput struct {
 }
 
 type GetGenresUseCase struct {
-	movieStorage providers.MovieStorage
-	logger       *logger.Logger
+	movieRepo repository.MovieRepository
+	logger    *logger.Logger
 }
 
-func NewGetGenresUseCase(storage providers.MovieStorage, log *logger.Logger) *GetGenresUseCase {
+func NewGetGenresUseCase(repo repository.MovieRepository, log *logger.Logger) *GetGenresUseCase {
 	return &GetGenresUseCase{
-		movieStorage: storage,
-		logger:       log,
+		movieRepo: repo,
+		logger:    log,
 	}
 }
 
 func (uc *GetGenresUseCase) Execute() (*GetGenresOutput, error) {
-	genres, err := uc.movieStorage.GetAllGenres()
+	genres, err := uc.movieRepo.GetAllGenres()
 	if err != nil {
 		uc.logger.Error("Failed to get genres", err)
 		return nil, err

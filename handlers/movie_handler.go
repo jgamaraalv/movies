@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/jgamaraalv/movies.git/domain/repository"
 	"github.com/jgamaraalv/movies.git/logger"
-	"github.com/jgamaraalv/movies.git/providers"
 	"github.com/jgamaraalv/movies.git/usecases/movie"
 )
 
@@ -19,13 +19,13 @@ type MovieHandler struct {
 	logger            *logger.Logger
 }
 
-func NewMovieHandler(storage providers.MovieStorage, log *logger.Logger) *MovieHandler {
+func NewMovieHandler(repo repository.MovieRepository, log *logger.Logger) *MovieHandler {
 	return &MovieHandler{
-		getTopMoviesUC:    movie.NewGetTopMoviesUseCase(storage, log),
-		getRandomMoviesUC: movie.NewGetRandomMoviesUseCase(storage, log),
-		searchMoviesUC:    movie.NewSearchMoviesUseCase(storage, log),
-		getMovieByIDUC:    movie.NewGetMovieByIDUseCase(storage, log),
-		getGenresUC:       movie.NewGetGenresUseCase(storage, log),
+		getTopMoviesUC:    movie.NewGetTopMoviesUseCase(repo, log),
+		getRandomMoviesUC: movie.NewGetRandomMoviesUseCase(repo, log),
+		searchMoviesUC:    movie.NewSearchMoviesUseCase(repo, log),
+		getMovieByIDUC:    movie.NewGetMovieByIDUseCase(repo, log),
+		getGenresUC:       movie.NewGetGenresUseCase(repo, log),
 		logger:            log,
 	}
 }
@@ -42,7 +42,7 @@ func (h *MovieHandler) writeJSONResponse(w http.ResponseWriter, data interface{}
 
 func (h *MovieHandler) handleError(w http.ResponseWriter, err error, context string) bool {
 	if err != nil {
-		if err == providers.ErrMovieNotFound {
+		if err == repository.ErrMovieNotFound {
 			http.Error(w, context, http.StatusNotFound)
 			return true
 		}
@@ -101,7 +101,6 @@ func (h *MovieHandler) SearchMovies(w http.ResponseWriter, r *http.Request) {
 
 	output, err := h.searchMoviesUC.Execute(input)
 	if err != nil {
-		// Return empty array for invalid search (e.g., empty query)
 		h.writeJSONResponse(w, []interface{}{})
 		return
 	}
