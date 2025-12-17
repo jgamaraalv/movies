@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: movies
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - ./database/data:/var/lib/postgresql/data
+    networks:
+      - internal
+
+networks:
+  internal:
+    # internal: true
