@@ -2,9 +2,11 @@ import "./components/AnimatedLoading.js";
 import "./components/YouTubeEmbed.js";
 import Router from "./services/Router.js";
 import API from "./services/API.js";
+import Store from "./services/Store.js";
 
 window.app = {
   API,
+  Store,
   Router,
   showError: (
     message = "There was an error loading the page",
@@ -54,6 +56,7 @@ window.app = {
     if (errors.length == 0) {
       const response = await API.register(name, email, password);
       if (response.success) {
+        app.Store.jwt = response.jwt;
         app.Router.go("/account/");
       } else {
         app.showError(response.message, false);
@@ -73,6 +76,7 @@ window.app = {
     if (errors.length == 0) {
       const response = await API.authenticate(email, password);
       if (response.success) {
+        app.Store.jwt = response.jwt;
         app.Router.go("/account/");
       } else {
         app.showError(response.message, false);
