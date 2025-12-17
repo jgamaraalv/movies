@@ -15,6 +15,29 @@ export const API = {
   getGenres: async () => {
     return await API.fetch("genres");
   },
+  register: async (name, email, password) => {
+    return await API.send("account/register/", { name, email, password });
+  },
+  authenticate: async (email, password) => {
+    return await API.send("account/authenticate/", { email, password });
+  },
+  send: async (service, args) => {
+    try {
+      const response = await fetch(API.baseURL + service, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(args),
+      });
+      const result = await response.json();
+      return result;
+    } catch (e) {
+      console.error(e);
+      app.showError();
+    }
+  },
+
   fetch: async (service, args) => {
     try {
       const queryString = args ? new URLSearchParams(args).toString() : "";
