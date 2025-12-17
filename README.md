@@ -54,9 +54,9 @@ Crie um novo arquivo `.env` na raiz do projeto e copie o conteúdo do arquivo `.
     docker-compose down
     ```
 
-## Diagramas
+## Documentação
 
-- Adicionar diagrama de arquitetura
+- Diagrama de Entidade-Relacionamento: [ENTITY_RELATION_DIAGRAM.MD](docs/ENTITY_RELATION_DIAGRAM.MD)
 
 ## Models
 
