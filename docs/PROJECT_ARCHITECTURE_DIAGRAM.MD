@@ -1,18 +1,18 @@
 ## Diagrama de Arquitetura do Projeto
 
+```mermaid
 graph TD
-
   subgraph Frontend [Frontend SPA]
     App[App.js]
     Router[Router Service]
     Routes[Routes Definitions]
     API[API Service]
-    
+
     subgraph Components [Web Components]
       Pages[Page Components]
       Shared[Shared Components]
     end
-    
+
     UI[HTML/CSS Interface]
   end
 
@@ -52,10 +52,11 @@ graph TD
   Handlers --> Repository
   Repository --> Models
   Server --> Logger
-  
+
   %% Database Interaction
   Repository -- TCP --> DB
 
   %% External Resources
   UI --> YouTube
   UI --> TMDB
+```
