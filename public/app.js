@@ -85,6 +85,10 @@ window.app = {
       app.showError(errors.join(". "), false);
     }
   },
+  logout: () => {
+    Store.jwt = null;
+    app.Router.go("/");
+  },
 };
 
 window.addEventListener("DOMContentLoaded", () => {
