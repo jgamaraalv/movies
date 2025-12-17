@@ -1,8 +1,31 @@
+import API from "../services/API.js";
+import MovieItemComponent from "./MovieItem.js";
+
 export default class HomePage extends HTMLElement {
+   async render() {
+        const topMovies = await API.getTopMovies();
+        renderMoviesInList(topMovies, this.querySelector("#top-10 ul"));
+
+        const randomMovies = await API.getRandomMovies();
+        renderMoviesInList(randomMovies, this.querySelector("#random ul"));
+
+        function renderMoviesInList(movies, ul) {
+            const fragment = document.createDocumentFragment();
+            movies.forEach(movie => {
+                const li = document.createElement("li");
+                li.appendChild(new MovieItemComponent(movie));
+                fragment.appendChild(li);
+            });
+            ul.appendChild(fragment);
+        }
+    }
+
+
     connectedCallback() {
         const template = document.getElementById("template-home");
         const content = template.content.cloneNode(true);
         this.appendChild(content);  
+        this.render();
     }
 }
 
