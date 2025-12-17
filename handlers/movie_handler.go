@@ -5,11 +5,25 @@ import (
 	"net/http"
 
 	"github.com/jgamaraalv/movies.git/logger"
-	"github.com/jgamaraalv/movies.git/models"
+	"github.com/jgamaraalv/movies.git/providers"
 )
 
 type MovieHandler struct {
-	logger *logger.Logger
+	storage providers.MovieStorage
+	logger  *logger.Logger
+}
+
+func (h *MovieHandler) handleStorageError(w http.ResponseWriter, err error, context string) bool {
+	if err != nil {
+		if err == providers.ErrMovieNotFound {
+			http.Error(w, context, http.StatusNotFound)
+			return true
+		}
+		h.logger.Error(context, err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return true
+	}
+	return false
 }
 
 func (h *MovieHandler) writeJSONResponse(w http.ResponseWriter, data interface{}) error {
@@ -23,34 +37,10 @@ func (h *MovieHandler) writeJSONResponse(w http.ResponseWriter, data interface{}
 }
 
 func (h *MovieHandler) GetTopMovies(w http.ResponseWriter, r *http.Request) {
-	movies := []models.Movie{
-		{
-			ID:          1,
-			TMDB_ID:     101,
-			Title:       "The Hacker",
-			ReleaseYear: 2022,
-			Genres:      []models.Genre{{ID: 1, Name: "Thriller"}},
-			Keywords:    []string{"hacking", "cybercrime"},
-			Casting:     []models.Actor{{ID: 1, FirstName: "Jane Doe"}},
-		},
-		{
-			ID:          2,
-			TMDB_ID:     102,
-			Title:       "Space Dreams",
-			ReleaseYear: 2020,
-			Genres:      []models.Genre{{ID: 2, Name: "Sci-Fi"}},
-			Keywords:    []string{"space", "exploration"},
-			Casting:     []models.Actor{{ID: 2, FirstName: "John Star"}},
-		},
-		{
-			ID:          3,
-			TMDB_ID:     103,
-			Title:       "The Lost City",
-			ReleaseYear: 2019,
-			Genres:      []models.Genre{{ID: 3, Name: "Adventure"}},
-			Keywords:    []string{"jungle", "treasure"},
-			Casting:     []models.Actor{{ID: 3, FirstName: "Lara Hunt"}},
-		},
+	movies, err := h.storage.GetTopMovies()
+	if h.handleStorageError(w, err, "Failed to get top movies") {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		h.logger.Error("Failed to get top movies", err)
 	}
 
 	if h.writeJSONResponse(w, movies) == nil {
@@ -58,8 +48,9 @@ func (h *MovieHandler) GetTopMovies(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NewMovieHandler(log *logger.Logger) *MovieHandler {
+func NewMovieHandler(storage providers.MovieStorage, log *logger.Logger) *MovieHandler {
 	return &MovieHandler{
+		storage: storage,
 		logger: log,
 	}
 }

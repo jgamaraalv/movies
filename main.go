@@ -11,6 +11,7 @@ import (
 
 	"github.com/jgamaraalv/movies.git/handlers"
 	"github.com/jgamaraalv/movies.git/logger"
+	"github.com/jgamaraalv/movies.git/providers"
 )
 
 func main() {
@@ -35,8 +36,14 @@ func main() {
 
 	defer db.Close()
 
+	// Initialize repositories
+	movieRepo, err := providers.NewMovieRepository(db, logInstance)
+	if err != nil {
+		log.Fatalf("Failed to initialize movie repository: %v", err)
+	}
+
 	// Movie Handler Initializer
-	movieHandler := handlers.NewMovieHandler(logInstance)
+movieHandler := handlers.NewMovieHandler(movieRepo, logInstance)	
 
 	// Handler for static files (frontend)
 	http.HandleFunc("/api/movies/top", movieHandler.GetTopMovies)
