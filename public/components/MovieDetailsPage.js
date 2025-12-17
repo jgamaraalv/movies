@@ -1,34 +1,31 @@
-import API from "../services/API.js";
+import { API } from "../services/API.js";
 
 export default class MovieDetailsPage extends HTMLElement {
+  id = null;
   movie = null;
 
-  async render(id) {
+  async render() {
     try {
-      this.movie = await API.getMovieById(id);
-    } catch (e) {
-      app.showError();
+      this.movie = await API.getMovieById(this.id);
+    } catch {
       return;
     }
-
     const template = document.getElementById("template-movie-details");
     const content = template.content.cloneNode(true);
     this.appendChild(content);
-
     this.querySelector("h2").textContent = this.movie.title;
     this.querySelector("h3").textContent = this.movie.tagline;
     this.querySelector("img").src = this.movie.poster_url;
     this.querySelector("#trailer").dataset.url = this.movie.trailer_url;
     this.querySelector("#overview").textContent = this.movie.overview;
-    this.querySelector("#metadata").innerHTML = `                        
-            <dt>Release Date</dt>
-            <dd>${this.movie.release_year}</dd>                        
+    this.querySelector("#metadata").innerHTML = `
+            <dt>Release Year</dt>
+            <dd>${this.movie.release_year}</dd>
             <dt>Score</dt>
-            <dd>${this.movie.score} / 10</dd>                        
-            <dt>Original languae</dt>
-            <dd>${this.movie.language}</dd>                        
+            <dd>${this.movie.score} / 10</dd>
+            <dt>Popularity</dt>
+            <dd>${this.movie.popularity}</dd>
         `;
-
     const ulGenres = this.querySelector("#genres");
     ulGenres.innerHTML = "";
     this.movie.genres.forEach((genre) => {
@@ -36,6 +33,19 @@ export default class MovieDetailsPage extends HTMLElement {
       li.textContent = genre.name;
       ulGenres.appendChild(li);
     });
+
+    this.querySelector("#actions #btnFavorites").addEventListener(
+      "click",
+      () => {
+        app.saveToCollection(this.movie.id, "favorite");
+      }
+    );
+    this.querySelector("#actions #btnWatchlist").addEventListener(
+      "click",
+      () => {
+        app.saveToCollection(this.movie.id, "watchlist");
+      }
+    );
 
     const ulCast = this.querySelector("#cast");
     ulCast.innerHTML = "";
@@ -52,8 +62,8 @@ export default class MovieDetailsPage extends HTMLElement {
   }
 
   connectedCallback() {
-    const id = this.params[0];
-    this.render(id);
+    this.id = this.params[0];
+    this.render();
   }
 }
 customElements.define("movie-details-page", MovieDetailsPage);
