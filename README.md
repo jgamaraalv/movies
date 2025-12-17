@@ -24,6 +24,9 @@ Aplicativo web de listagem de vídeos em Go e Vannila Javascript para aplicaçã
 - Docker Compose
 
 ### Passo a passo
+Antes de iniciar, certifique-se de que o Docker e o Docker Compose estão instalados no seu sistema.
+
+Crie um novo arquivo `.env` na raiz do projeto e copie o conteúdo do arquivo `.env.example` para ele.
 
 1.  **Subir a aplicação**:
     Execute o comando abaixo na raiz do projeto para criar e iniciar os containers (aplicação e banco de dados).
