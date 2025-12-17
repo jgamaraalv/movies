@@ -1,3 +1,5 @@
+import HomePage from "./components/HomePage.js";
+
 window.app = { 
     search: (event) => {
         event.preventDefault();
@@ -7,5 +9,5 @@ window.app = {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-
+  document.querySelector("main").appendChild(new HomePage());
 })
