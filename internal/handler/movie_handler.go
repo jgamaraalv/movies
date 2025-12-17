@@ -1,13 +1,13 @@
-package handlers
+package handler
 
 import (
 	"encoding/json"
 	"net/http"
 	"strconv"
 
-	"github.com/jgamaraalv/movies.git/domain/repository"
-	"github.com/jgamaraalv/movies.git/logger"
-	"github.com/jgamaraalv/movies.git/usecases/movie"
+	"github.com/jgamaraalv/movies.git/internal/domain/repository"
+	"github.com/jgamaraalv/movies.git/internal/usecase/movie"
+	"github.com/jgamaraalv/movies.git/pkg/logger"
 )
 
 type MovieHandler struct {

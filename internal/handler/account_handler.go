@@ -1,4 +1,4 @@
-package handlers
+package handler
 
 import (
 	"context"
@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/jgamaraalv/movies.git/domain/repository"
-	"github.com/jgamaraalv/movies.git/logger"
-	"github.com/jgamaraalv/movies.git/token"
-	accountuc "github.com/jgamaraalv/movies.git/usecases/account"
+	"github.com/jgamaraalv/movies.git/internal/domain/repository"
+	accountuc "github.com/jgamaraalv/movies.git/internal/usecase/account"
+	"github.com/jgamaraalv/movies.git/pkg/logger"
+	"github.com/jgamaraalv/movies.git/pkg/token"
 )
 
 type RegisterRequest struct {

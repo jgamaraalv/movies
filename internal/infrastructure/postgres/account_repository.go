@@ -1,12 +1,12 @@
-package providers
+package postgres
 
 import (
 	"database/sql"
 	"time"
 
-	"github.com/jgamaraalv/movies.git/domain/repository"
-	"github.com/jgamaraalv/movies.git/logger"
+	"github.com/jgamaraalv/movies.git/internal/domain/repository"
 	"github.com/jgamaraalv/movies.git/models"
+	"github.com/jgamaraalv/movies.git/pkg/logger"
 	"golang.org/x/crypto/bcrypt"
 )
 

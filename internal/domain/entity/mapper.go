@@ -33,7 +33,6 @@ func MovieFromModel(m models.Movie) *Movie {
 		}
 	}
 	movie.SetCasting(casting)
-
 	movie.SetKeywords(m.Keywords)
 
 	return movie

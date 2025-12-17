@@ -1,8 +1,8 @@
 package entity
 
 import (
-	"github.com/jgamaraalv/movies.git/domain/repository"
-	"github.com/jgamaraalv/movies.git/domain/valueobject"
+	"github.com/jgamaraalv/movies.git/internal/domain/repository"
+	"github.com/jgamaraalv/movies.git/internal/domain/valueobject"
 )
 
 const (
@@ -48,25 +48,11 @@ func ReconstructUser(id int, name string, email string, favorites, watchlist []i
 	}, nil
 }
 
-func (u *User) ID() int {
-	return u.id
-}
-
-func (u *User) Name() string {
-	return u.name
-}
-
-func (u *User) Email() valueobject.Email {
-	return u.email
-}
-
-func (u *User) EmailString() string {
-	return u.email.String()
-}
-
-func (u *User) Password() valueobject.Password {
-	return u.password
-}
+func (u *User) ID() int                        { return u.id }
+func (u *User) Name() string                   { return u.name }
+func (u *User) Email() valueobject.Email       { return u.email }
+func (u *User) EmailString() string            { return u.email.String() }
+func (u *User) Password() valueobject.Password { return u.password }
 
 func (u *User) Favorites() []int {
 	result := make([]int, len(u.favorites))
@@ -156,14 +142,6 @@ func (u *User) AddToCollection(movieID int, collectionType string) error {
 	}
 }
 
-func (u *User) FavoritesCount() int {
-	return len(u.favorites)
-}
-
-func (u *User) WatchlistCount() int {
-	return len(u.watchlist)
-}
-
-func (u *User) HasCollections() bool {
-	return len(u.favorites) > 0 || len(u.watchlist) > 0
-}
+func (u *User) FavoritesCount() int  { return len(u.favorites) }
+func (u *User) WatchlistCount() int  { return len(u.watchlist) }
+func (u *User) HasCollections() bool { return len(u.favorites) > 0 || len(u.watchlist) > 0 }

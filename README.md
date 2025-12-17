@@ -73,7 +73,7 @@ Crie um novo arquivo `.env` na raiz do projeto e copie o conteúdo do arquivo `.
 ## Documentação
 
 - Diagrama de Entidade-Relacionamento: [ENTITY_RELATION_DIAGRAM.MD](docs/ENTITY_RELATION_DIAGRAM.MD)
-- Diagrama de Arquitetura: [PROJECT_ARCHITECTURE_DIAGRAM.MD](docs/PROJECT_ARCHITECTURE_DIAGRAM.MD)
+- Diagrama de Arquitetura: [PROJECT_ARCHITECTURE.MD](docs/PROJECT_ARCHITECTURE.MD)
 - Guia de Performance Frontend: [FRONTEND_PERFORMANCE_GUIDE.md](docs/FRONTEND_PERFORMANCE_GUIDE.md)
 
 ## Models

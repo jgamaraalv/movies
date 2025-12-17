@@ -4,10 +4,10 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/jgamaraalv/movies.git/domain/entity"
-	"github.com/jgamaraalv/movies.git/domain/repository"
-	"github.com/jgamaraalv/movies.git/logger"
+	"github.com/jgamaraalv/movies.git/internal/domain/entity"
+	"github.com/jgamaraalv/movies.git/internal/domain/repository"
 	"github.com/jgamaraalv/movies.git/models"
+	"github.com/jgamaraalv/movies.git/pkg/logger"
 )
 
 type GetMovieByIDInput struct {

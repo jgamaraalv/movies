@@ -3,9 +3,9 @@ package movie
 import (
 	"errors"
 
-	"github.com/jgamaraalv/movies.git/domain/repository"
-	"github.com/jgamaraalv/movies.git/logger"
+	"github.com/jgamaraalv/movies.git/internal/domain/repository"
 	"github.com/jgamaraalv/movies.git/models"
+	"github.com/jgamaraalv/movies.git/pkg/logger"
 )
 
 type SearchMoviesInput struct {

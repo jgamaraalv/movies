@@ -9,9 +9,9 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 
-	"github.com/jgamaraalv/movies.git/handlers"
-	"github.com/jgamaraalv/movies.git/logger"
-	"github.com/jgamaraalv/movies.git/providers"
+	"github.com/jgamaraalv/movies.git/internal/handler"
+	"github.com/jgamaraalv/movies.git/internal/infrastructure/postgres"
+	"github.com/jgamaraalv/movies.git/pkg/logger"
 )
 
 func main() {
@@ -30,23 +30,22 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-
 	defer db.Close()
 
-	// Initialize repositories (implementing domain interfaces)
-	movieRepo, err := providers.NewMovieRepository(db, logInstance)
+	// Initialize repositories
+	movieRepo, err := postgres.NewMovieRepository(db, logInstance)
 	if err != nil {
 		log.Fatalf("Failed to initialize movie repository: %v", err)
 	}
 
-	accountRepo, err := providers.NewAccountRepository(db, logInstance)
+	accountRepo, err := postgres.NewAccountRepository(db, logInstance)
 	if err != nil {
 		log.Fatalf("Failed to initialize account repository: %v", err)
 	}
 
-	// Initialize handlers with domain repository interfaces
-	movieHandler := handlers.NewMovieHandler(movieRepo, logInstance)
-	accountHandler := handlers.NewAccountHandler(accountRepo, logInstance)
+	// Initialize handlers
+	movieHandler := handler.NewMovieHandler(movieRepo, logInstance)
+	accountHandler := handler.NewAccountHandler(accountRepo, logInstance)
 
 	// Set up routes
 	http.HandleFunc("/api/account/register/", accountHandler.Register)

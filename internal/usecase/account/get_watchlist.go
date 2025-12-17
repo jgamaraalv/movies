@@ -1,18 +1,18 @@
 package account
 
 import (
-	"github.com/jgamaraalv/movies.git/domain/entity"
-	"github.com/jgamaraalv/movies.git/domain/repository"
-	"github.com/jgamaraalv/movies.git/domain/valueobject"
-	"github.com/jgamaraalv/movies.git/logger"
+	"github.com/jgamaraalv/movies.git/internal/domain/entity"
+	"github.com/jgamaraalv/movies.git/internal/domain/repository"
+	"github.com/jgamaraalv/movies.git/internal/domain/valueobject"
 	"github.com/jgamaraalv/movies.git/models"
+	"github.com/jgamaraalv/movies.git/pkg/logger"
 )
 
-type GetFavoritesInput struct {
+type GetWatchlistInput struct {
 	Email string
 }
 
-type FavoriteMovieInfo struct {
+type WatchlistMovieInfo struct {
 	Movie          models.Movie
 	IsRecent       bool
 	IsClassic      bool
@@ -22,27 +22,27 @@ type FavoriteMovieInfo struct {
 	TitleWithYear  string
 }
 
-type GetFavoritesOutput struct {
-	Favorites        []models.Movie
-	FavoritesInfo    []FavoriteMovieInfo
+type GetWatchlistOutput struct {
+	Watchlist        []models.Movie
+	WatchlistInfo    []WatchlistMovieInfo
 	TotalCount       int
 	HighlyRatedCount int
 	RecentCount      int
 }
 
-type GetFavoritesUseCase struct {
+type GetWatchlistUseCase struct {
 	userRepo repository.UserRepository
 	logger   *logger.Logger
 }
 
-func NewGetFavoritesUseCase(repo repository.UserRepository, log *logger.Logger) *GetFavoritesUseCase {
-	return &GetFavoritesUseCase{
+func NewGetWatchlistUseCase(repo repository.UserRepository, log *logger.Logger) *GetWatchlistUseCase {
+	return &GetWatchlistUseCase{
 		userRepo: repo,
 		logger:   log,
 	}
 }
 
-func (uc *GetFavoritesUseCase) Execute(input GetFavoritesInput) (*GetFavoritesOutput, error) {
+func (uc *GetWatchlistUseCase) Execute(input GetWatchlistInput) (*GetWatchlistOutput, error) {
 	email, err := valueobject.NewEmail(input.Email)
 	if err != nil {
 		return nil, err
@@ -50,18 +50,18 @@ func (uc *GetFavoritesUseCase) Execute(input GetFavoritesInput) (*GetFavoritesOu
 
 	userModel, err := uc.userRepo.GetAccountDetails(email.String())
 	if err != nil {
-		uc.logger.Error("Failed to get user favorites", err)
+		uc.logger.Error("Failed to get user watchlist", err)
 		return nil, err
 	}
 
-	favoritesInfo := make([]FavoriteMovieInfo, len(userModel.Favorites))
+	watchlistInfo := make([]WatchlistMovieInfo, len(userModel.Watchlist))
 	highlyRatedCount := 0
 	recentCount := 0
 
-	for i, m := range userModel.Favorites {
+	for i, m := range userModel.Watchlist {
 		movieEntity := entity.MovieFromModel(m)
 
-		favoritesInfo[i] = FavoriteMovieInfo{
+		watchlistInfo[i] = WatchlistMovieInfo{
 			Movie:          m,
 			IsRecent:       movieEntity.IsRecent(),
 			IsClassic:      movieEntity.IsClassic(),
@@ -79,12 +79,12 @@ func (uc *GetFavoritesUseCase) Execute(input GetFavoritesInput) (*GetFavoritesOu
 		}
 	}
 
-	uc.logger.Info("Successfully retrieved favorites for: " + email.String())
+	uc.logger.Info("Successfully retrieved watchlist for: " + email.String())
 
-	return &GetFavoritesOutput{
-		Favorites:        userModel.Favorites,
-		FavoritesInfo:    favoritesInfo,
-		TotalCount:       len(userModel.Favorites),
+	return &GetWatchlistOutput{
+		Watchlist:        userModel.Watchlist,
+		WatchlistInfo:    watchlistInfo,
+		TotalCount:       len(userModel.Watchlist),
 		HighlyRatedCount: highlyRatedCount,
 		RecentCount:      recentCount,
 	}, nil

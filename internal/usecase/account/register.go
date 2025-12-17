@@ -1,12 +1,12 @@
 package account
 
 import (
-	"github.com/jgamaraalv/movies.git/domain/entity"
-	"github.com/jgamaraalv/movies.git/domain/repository"
-	"github.com/jgamaraalv/movies.git/domain/valueobject"
-	"github.com/jgamaraalv/movies.git/logger"
+	"github.com/jgamaraalv/movies.git/internal/domain/entity"
+	"github.com/jgamaraalv/movies.git/internal/domain/repository"
+	"github.com/jgamaraalv/movies.git/internal/domain/valueobject"
 	"github.com/jgamaraalv/movies.git/models"
-	"github.com/jgamaraalv/movies.git/token"
+	"github.com/jgamaraalv/movies.git/pkg/logger"
+	"github.com/jgamaraalv/movies.git/pkg/token"
 )
 
 type RegisterInput struct {
@@ -44,7 +44,6 @@ func (uc *RegisterUseCase) Execute(input RegisterInput) (*RegisterOutput, error)
 		return nil, err
 	}
 
-	// Use domain entity to validate and create user
 	user, err := entity.NewUser(input.Name, email, password)
 	if err != nil {
 		return nil, err
