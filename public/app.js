@@ -19,6 +19,9 @@ window.app = {
   search: (event) => {
     event.preventDefault();
     const keywords = document.querySelector("input[type=search]").value;
+    if (keywords.length > 1) {
+      app.Router.go(`/movies?q=${keywords}`);
+    }
   },
 };
 

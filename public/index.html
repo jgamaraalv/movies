@@ -97,6 +97,33 @@
       </article>
     </template>
 
+    <template id="template-movies">
+      <section>
+        <div id="search-header">
+          <h2></h2>
+          <section id="filters">
+            <select id="filter" onchange="app.searchFilterChange(this.value)">
+              <option>Filter by Genre</option>
+            </select>
+            <select id="order" onchange="app.searchOrderChange(this.value)">
+              <option value="popularity">Sort by Popularity</option>
+              <option value="score">Sort by Score</option>
+              <option value="date">Sort by Release Date</option>
+              <option value="name">Sort by Name</option>
+            </select>
+          </section>
+        </div>
+        <ul id="movies-result">
+          <animated-loading
+            data-elements="5"
+            data-width="150px"
+            data-height="220px"
+          >
+          </animated-loading>
+        </ul>
+      </section>
+    </template>
+
     <footer>
       <p>© Movies - vequiato.dev</p>
     </footer>
