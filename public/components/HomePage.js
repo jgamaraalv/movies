@@ -16,6 +16,7 @@ export default class HomePage extends HTMLElement {
         li.appendChild(new MovieItemComponent(movie));
         fragment.appendChild(li);
       });
+      ul.innerHTML = "";
       ul.appendChild(fragment);
     }
   }
