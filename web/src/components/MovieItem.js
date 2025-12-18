@@ -5,6 +5,16 @@ export default class MovieItemComponent extends HTMLElement {
   }
 
   connectedCallback() {
+    // If content already exists (SSR), skip rendering (hydration mode)
+    if (this.children.length > 0) {
+      return;
+    }
+
+    // If no movie data (shouldn't happen in normal SPA flow), skip
+    if (!this._movie) {
+      return;
+    }
+
     const a = document.createElement("a");
     a.href = "/movies/" + this._movie.id;
     a.className = "navlink";

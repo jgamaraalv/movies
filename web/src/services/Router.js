@@ -6,6 +6,22 @@ const Router = {
   init: () => {
     _mainElement = document.querySelector("main");
 
+    // Check if page was server-side rendered
+    const ssrDataScript = document.getElementById("ssr-data");
+    if (ssrDataScript && _mainElement && _mainElement.children.length > 0) {
+      // Page was SSR'd, hydrate instead of re-rendering
+      try {
+        const ssrData = JSON.parse(ssrDataScript.textContent);
+        Router.hydrate(ssrData);
+      } catch (e) {
+        console.warn("Failed to parse SSR data, falling back to SPA:", e);
+        Router.go(location.pathname + location.search, false);
+      }
+    } else {
+      // Normal SPA initialization
+      Router.go(location.pathname + location.search, false);
+    }
+
     document.body.addEventListener("click", (event) => {
       const link = event.target.closest("a.navlink");
       if (link) {
@@ -18,8 +34,48 @@ const Router = {
     window.addEventListener("popstate", () => {
       Router.go(location.pathname, false);
     });
+  },
+  hydrate: (ssrData) => {
+    // Hydrate the existing SSR content by attaching event listeners
+    // The HTML is already rendered, we just need to make it interactive
 
-    Router.go(location.pathname + location.search);
+    // Find and initialize Web Components that might need hydration
+    const movieItems = _mainElement.querySelectorAll("movie-item");
+    movieItems.forEach((item) => {
+      // Components are already rendered, just ensure they're interactive
+      if (item.connectedCallback) {
+        // Component might need to re-run connectedCallback for event binding
+        // But since HTML is already there, we just need to ensure events are bound
+      }
+    });
+
+    // Bind YouTube embed if present
+    const youtubeEmbed = _mainElement.querySelector("youtube-embed");
+    if (youtubeEmbed && youtubeEmbed.dataset.url) {
+      // YouTube embed component will handle its own initialization
+    }
+
+    // Bind action buttons for movie details page
+    const actionsContainer = _mainElement.querySelector("#actions");
+    if (actionsContainer) {
+      const movieId = actionsContainer.dataset.id;
+      actionsContainer.addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+
+        if (btn.id === "btnFavorites") {
+          app.saveToCollection(movieId, "favorite");
+        } else if (btn.id === "btnWatchlist") {
+          app.saveToCollection(movieId, "watchlist");
+        }
+      });
+    }
+
+    // Remove SSR data script after hydration
+    const ssrDataScript = document.getElementById("ssr-data");
+    if (ssrDataScript) {
+      ssrDataScript.remove();
+    }
   },
   go: (route, addToHistory = true) => {
     if (addToHistory) {
@@ -60,6 +116,7 @@ const Router = {
       pageElement.textContent = "Page not found";
     }
 
+    // Clear any existing SSR content
     if (!document.startViewTransition) {
       while (_mainElement.firstChild) {
         _mainElement.removeChild(_mainElement.firstChild);

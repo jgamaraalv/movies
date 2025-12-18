@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -61,6 +63,13 @@ func main() {
 	movieHandler := handler.NewMovieHandler(movieRepo, logInstance)
 	accountHandler := handler.NewAccountHandler(accountRepo, logInstance)
 
+	// Initialize SSR handler
+	ssrHandler, err := handler.NewSSRHandler(movieHandler, logInstance)
+	if err != nil {
+		log.Printf("Warning: Failed to initialize SSR handler: %v. SSR will be disabled.", err)
+		ssrHandler = nil
+	}
+
 	// Health check endpoint for Docker/Kubernetes probes
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		if err := db.Ping(); err != nil {
@@ -103,14 +112,85 @@ func main() {
 	}
 	publicDir, _ = filepath.Abs(publicDir)
 
-	catchAllHandler := func(w http.ResponseWriter, r *http.Request) {
+	// Helper function to check if a file exists
+	fileExists := func(path string) bool {
+		fullPath := filepath.Join(publicDir, strings.TrimPrefix(path, "/"))
+		_, err := os.Stat(fullPath)
+		return err == nil
+	}
+
+	// Helper function to serve static files or fallback to index.html
+	serveStaticOrIndex := func(w http.ResponseWriter, r *http.Request) {
+		// Check if it's a static file that exists
+		if fileExists(r.URL.Path) {
+			http.ServeFile(w, r, filepath.Join(publicDir, r.URL.Path))
+			return
+		}
+		// Fallback to index.html for SPA routes
 		http.ServeFile(w, r, filepath.Join(publicDir, "index.html"))
 	}
-	http.HandleFunc("/movies", catchAllHandler)
-	http.HandleFunc("/movies/", catchAllHandler)
-	http.HandleFunc("/account/", catchAllHandler)
 
-	http.Handle("/", http.FileServer(http.Dir(publicDir)))
+	// Register static file handlers FIRST (order matters in Go http)
+	// Use http.FileServer which handles MIME types correctly
+	fileServer := http.FileServer(http.Dir(publicDir))
+
+	// Register static file paths with proper prefix stripping
+	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(filepath.Join(publicDir, "assets")))))
+	http.Handle("/images/", http.StripPrefix("/images/", http.FileServer(http.Dir(filepath.Join(publicDir, "images")))))
+
+	// For other static files, use the main file server
+	http.HandleFunc("/app.webmanifest", func(w http.ResponseWriter, r *http.Request) {
+		fileServer.ServeHTTP(w, r)
+	})
+	http.HandleFunc("/sw.js", func(w http.ResponseWriter, r *http.Request) {
+		fileServer.ServeHTTP(w, r)
+	})
+
+	// SSR routes for public pages (if SSR handler is available)
+	if ssrHandler != nil {
+		// Home page with SSR (only for exact "/" path)
+		// Note: Static file handlers are registered above, so they take precedence
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			// Root path - use SSR
+			if r.URL.Path == "/" {
+				ssrHandler.HomePage(w, r)
+				return
+			}
+
+			// Fallback to index.html for SPA routes (static files already handled above)
+			serveStaticOrIndex(w, r)
+		})
+
+		// Movie details page with SSR
+		http.HandleFunc("/movies/", func(w http.ResponseWriter, r *http.Request) {
+			path := strings.TrimPrefix(r.URL.Path, "/movies/")
+			path = strings.TrimSuffix(path, "/")
+			if path != "" && path != "search" {
+				if _, err := strconv.Atoi(path); err == nil {
+					ssrHandler.MovieDetailsPage(w, r)
+					return
+				}
+			}
+			serveStaticOrIndex(w, r)
+		})
+
+		// Movies search page with SSR
+		http.HandleFunc("/movies", func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Query().Get("q") != "" {
+				ssrHandler.MoviesPage(w, r)
+			} else {
+				serveStaticOrIndex(w, r)
+			}
+		})
+	} else {
+		// Fallback to SPA if SSR is not available
+		http.HandleFunc("/movies", serveStaticOrIndex)
+		http.HandleFunc("/movies/", serveStaticOrIndex)
+		http.HandleFunc("/", serveStaticOrIndex)
+	}
+
+	// Account pages always use SPA (private pages)
+	http.HandleFunc("/account/", serveStaticOrIndex)
 
 	const addr = ":8080"
 	logInstance.Info("Server starting on " + addr)
