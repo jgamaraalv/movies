@@ -248,11 +248,6 @@ graph TD
     UI[HTML/CSS Interface]
   end
 
-  subgraph SW [Service Worker Layer]
-    SW[Service Worker<br/>sw.js]
-    Cache[Cache Storage<br/>movies-cache-v1]
-  end
-
   subgraph Backend [Backend - Clean Architecture]
     subgraph Handlers [Interface Layer]
       HTTP[HTTP Handlers]
@@ -294,12 +289,9 @@ graph TD
   Pages --> UI
   Shared --> UI
 
-  %% Service Worker Interception
-  API -- HTTP Requests --> SW
-  UI -- Static Assets --> SW
-  SW --> Cache
-  SW -- SWR Strategy --> HTTP
-  SW -- Network-First --> HTTP
+  %% Frontend to Backend
+  API -- HTTP/JSON --> HTTP
+  UI -- Static Assets --> HTTP
 
   %% Backend Flow (Dependency Direction: Outside → Inside)
   HTTP --> UC
@@ -323,13 +315,11 @@ graph TD
   classDef application fill:#fff3e0,stroke:#e65100
   classDef interface fill:#f3e5f5,stroke:#4a148c
   classDef infra fill:#e8f5e9,stroke:#1b5e20
-  classDef sw fill:#fff9c4,stroke:#f57f17
 
   class Entities,VO,RepoInterface domain
   class UC application
   class HTTP interface
   class RepoImpl,Logger,Token infra
-  class SW,Cache sw
 ```
 
 ### Estratégia SWR (Stale-While-Revalidate)
