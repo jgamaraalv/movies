@@ -5,15 +5,20 @@ FROM golang:1.24-alpine AS dev
 
 WORKDIR /app
 
-RUN apk add --no-cache git && \
+RUN apk add --no-cache git bash && \
     go install github.com/cosmtrek/air@v1.49.0
 
-COPY go.mod go.sum ./
+# Copy Go modules (for initial download, volumes will override)
+COPY server/go.mod server/go.sum ./
 RUN go mod download
 
-COPY . .
+# Copy .air.toml (needed for air to work)
+COPY .air.toml ./
 
 EXPOSE 8080
+
+# Note: server/ and web/ are mounted via volumes in docker-compose
+# The build script should be run manually or via a separate step
 CMD ["air", "-c", ".air.toml"]
 
 # ============================================
@@ -23,16 +28,26 @@ FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
+# Copy Go modules
+COPY server/go.mod server/go.sum ./
 RUN go mod download
 
-COPY . .
+# Copy server code
+COPY server/ ./
 
 # Build otimizado para produção
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -ldflags="-w -s" \
     -o /app/server \
-    ./main.go
+    ./cmd/api/main.go
+
+# Build frontend: copy web source and build script, then build
+COPY web/ /build-frontend/web/
+COPY build.sh /build-frontend/build.sh
+RUN chmod +x /build-frontend/build.sh && \
+    cd /build-frontend && \
+    ./build.sh && \
+    mv public /app/public
 
 # ============================================
 # Stage 3: Imagem final de produção (mínima)
@@ -45,7 +60,7 @@ WORKDIR /app
 
 # Copia apenas o binário compilado
 COPY --from=builder /app/server .
-# Copia arquivos estáticos
+# Copia arquivos estáticos (build do frontend)
 COPY --from=builder /app/public ./public
 
 # Usuário não-root para segurança

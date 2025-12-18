@@ -1,4 +1,7 @@
 tmp
 *.log
-database/data
+server/database/data
 .env
+
+# Build output
+public/

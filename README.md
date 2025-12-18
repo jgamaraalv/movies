@@ -25,11 +25,12 @@ Aplicativo web de listagem de vídeos em Go e Vannila Javascript para aplicaçã
 
 ### Server-side
 
-- main.go - Configuração do servidor
-- providers/\*.go - Repositórios dos Models
-- handlers/\*.go - API handlers
-- models/\*.go - Models da aplicação
-- logger/logger.go - Utilitario para logs da aplicação
+- server/cmd/api/main.go - Configuração do servidor
+- server/internal/handler/\*.go - API handlers
+- server/internal/usecase/\*.go - Casos de uso
+- server/internal/infrastructure/\*.go - Implementações de infraestrutura
+- server/models/\*.go - Models da aplicação
+- server/pkg/logger/logger.go - Utilitário para logs da aplicação
 
 ## Como rodar
 
@@ -44,7 +45,16 @@ Antes de iniciar, certifique-se de que o Docker e o Docker Compose estão instal
 
 Crie um novo arquivo `.env` na raiz do projeto e copie o conteúdo do arquivo `.env.example` para ele.
 
-1.  **Subir a aplicação**:
+1.  **Build do frontend** (opcional, mas recomendado):
+    Antes de subir a aplicação, execute o script de build para gerar os arquivos estáticos:
+
+    ```bash
+    ./build.sh
+    ```
+
+    Isso copiará e organizará os arquivos de `web/` para `public/`.
+
+2.  **Subir a aplicação**:
     Execute o comando abaixo na raiz do projeto para criar e iniciar os containers (aplicação e banco de dados).
 
     ```bash
@@ -53,17 +63,19 @@ Crie um novo arquivo `.env` na raiz do projeto e copie o conteúdo do arquivo `.
 
     A aplicação ficará disponível em `http://localhost:8080`.
 
-2.  **Inicializar o banco de dados**:
+3.  **Inicializar o banco de dados**:
     Na primeira execução, é necessário rodar o script de instalação para criar as tabelas e popular o banco de dados.
 
     ```bash
-    docker exec -it movies-app-1 go run database/import/install.go
+    docker exec -it movies-app-1 go run ./database/import/install.go
     ```
 
-3.  **Desenvolvimento (Live Reload)**:
+    **Nota**: Se o container tiver outro nome, verifique com `docker ps` e ajuste o comando.
+
+4.  **Desenvolvimento (Live Reload)**:
     O ambiente está configurado com `air` para _live reload_. Qualquer alteração salva nos arquivos `.go` reiniciará a aplicação automaticamente dentro do container.
 
-4.  **Parar a aplicação**:
+5.  **Parar a aplicação**:
     Para parar e remover os containers:
 
     ```bash

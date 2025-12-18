@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -17,8 +18,21 @@ import (
 func main() {
 	logInstance := initializeLogger()
 
-	if err := godotenv.Load(); err != nil {
-		log.Printf("No .env file found or failed to load: %v", err)
+	// Try to load .env from multiple locations
+	// Priority: current dir (.env) -> parent dir (../.env) -> grandparent dir (../../.env)
+	envLoaded := false
+	envPaths := []string{".env", "../.env", "../../.env"}
+
+	for _, path := range envPaths {
+		if err := godotenv.Load(path); err == nil {
+			envLoaded = true
+			log.Printf("Loaded .env from: %s", path)
+			break
+		}
+	}
+
+	if !envLoaded {
+		log.Printf("No .env file found in any of the expected locations. Using environment variables only.")
 	}
 
 	dbConnStr := os.Getenv("DATABASE_URL")
@@ -65,14 +79,26 @@ func main() {
 	http.Handle("/api/account/save-to-collection/",
 		accountHandler.AuthMiddleware(http.HandlerFunc(accountHandler.SaveToCollection)))
 
+	// Get public directory path (from root of project)
+	publicDir := os.Getenv("PUBLIC_DIR")
+	if publicDir == "" {
+		// Default: assume we're running from project root, or use relative path
+		publicDir = "public"
+		// Try relative path from server/cmd/api (for development)
+		if _, err := os.Stat(publicDir); os.IsNotExist(err) {
+			publicDir = "../../public"
+		}
+	}
+	publicDir, _ = filepath.Abs(publicDir)
+
 	catchAllHandler := func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./public/index.html")
+		http.ServeFile(w, r, filepath.Join(publicDir, "index.html"))
 	}
 	http.HandleFunc("/movies", catchAllHandler)
 	http.HandleFunc("/movies/", catchAllHandler)
 	http.HandleFunc("/account/", catchAllHandler)
 
-	http.Handle("/", http.FileServer(http.Dir("public")))
+	http.Handle("/", http.FileServer(http.Dir(publicDir)))
 
 	const addr = ":8080"
 	logInstance.Info("Server starting on " + addr)

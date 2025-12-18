@@ -3,13 +3,13 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"io/ioutil"	
-	"log"		
+	"io/ioutil"
+	"log"
 	"os"
-	"strings"	
+	"strings"
 
-	_ "github.com/lib/pq"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -19,7 +19,7 @@ func main() {
 			log.Printf("No .env file found or failed to load: %v", err)
 		}
 	}
-	
+
 	// Database connection
 	dbConnStr := os.Getenv("DATABASE_URL")
 	if dbConnStr == "" {
@@ -36,14 +36,31 @@ func main() {
 		log.Fatal("Failed to ping database:", err)
 	}
 
-	sqlFilePath := "database/import/database-dump.sql"
-	if _, err := os.Stat(sqlFilePath); os.IsNotExist(err) {
-		sqlFilePath = "database-dump.sql"
+	// Try to find SQL file in multiple locations
+	sqlPaths := []string{
+		"database/import/database-dump.sql",    // From server root
+		"./database/import/database-dump.sql",  // Relative to current dir
+		"../database/import/database-dump.sql", // From import dir
+		"database-dump.sql",                    // Fallback
 	}
 
-	sqlContent, err := ioutil.ReadFile(sqlFilePath)
-	if err != nil {
-		log.Fatalf("Failed to read SQL file %s: %v", sqlFilePath, err)
+	var sqlFilePath string
+	var sqlContent []byte
+	var readErr error
+
+	for _, path := range sqlPaths {
+		if _, statErr := os.Stat(path); statErr == nil {
+			sqlFilePath = path
+			sqlContent, readErr = ioutil.ReadFile(path)
+			if readErr == nil {
+				log.Printf("Found SQL file at: %s", path)
+				break
+			}
+		}
+	}
+
+	if sqlFilePath == "" || readErr != nil {
+		log.Fatalf("Failed to find or read SQL file. Tried: %v", sqlPaths)
 	}
 
 	statements := strings.Split(string(sqlContent), ";\n")

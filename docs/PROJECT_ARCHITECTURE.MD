@@ -43,7 +43,7 @@ Conceitos aplicados neste projeto:
 
 ### Dependency Inversion Principle
 
-As interfaces dos repositórios são definidas na camada de domínio (`internal/domain/repository/`), e as implementações concretas ficam na infraestrutura (`internal/infrastructure/postgres/`). Isso permite:
+As interfaces dos repositórios são definidas na camada de domínio (`server/internal/domain/repository/`), e as implementações concretas ficam na infraestrutura (`server/internal/infrastructure/postgres/`). Isso permite:
 
 - Testar use cases sem banco de dados (mocks)
 - Trocar a implementação de persistência sem afetar o domínio
@@ -55,74 +55,140 @@ As interfaces dos repositórios são definidas na camada de domínio (`internal/
 
 ```
 movies/
-├── cmd/                          # Entry points da aplicação
-│   └── api/
-│       └── main.go               # Ponto de entrada HTTP server
-│
-├── internal/                     # Código interno (não exportável)
-│   ├── domain/                   # 🎯 Camada de Domínio
-│   │   ├── entity/               # Entidades ricas com comportamento
-│   │   │   ├── user.go           # Entidade User + regras de negócio
-│   │   │   ├── movie.go          # Entidade Movie + comportamentos
-│   │   │   └── mapper.go         # Conversão entity <-> model
-│   │   ├── repository/           # Interfaces + erros de domínio
-│   │   │   ├── user_repository.go
-│   │   │   ├── movie_repository.go
-│   │   │   └── errors.go         # Erros centralizados
-│   │   └── valueobject/          # Value Objects imutáveis
-│   │       ├── email.go          # Email com validação
-│   │       └── password.go       # Password com hash/verify
+├── server/                       # 🔧 Backend Go (Clean Architecture)
+│   ├── cmd/                      # Entry points da aplicação
+│   │   └── api/
+│   │       └── main.go           # Ponto de entrada HTTP server
 │   │
-│   ├── usecase/                  # 📋 Camada de Aplicação
-│   │   ├── account/              # Casos de uso de conta
-│   │   │   ├── register.go
-│   │   │   ├── authenticate.go
-│   │   │   ├── get_favorites.go
-│   │   │   ├── get_watchlist.go
-│   │   │   └── save_to_collection.go
-│   │   └── movie/                # Casos de uso de filmes
-│   │       ├── get_top_movies.go
-│   │       ├── get_random_movies.go
-│   │       ├── get_movie_by_id.go
-│   │       ├── search_movies.go
-│   │       └── get_genres.go
+│   ├── internal/                 # Código interno (não exportável)
+│   │   ├── domain/               # 🎯 Camada de Domínio
+│   │   │   ├── entity/           # Entidades ricas com comportamento
+│   │   │   │   ├── user.go       # Entidade User + regras de negócio
+│   │   │   │   ├── movie.go      # Entidade Movie + comportamentos
+│   │   │   │   └── mapper.go     # Conversão entity <-> model
+│   │   │   ├── repository/       # Interfaces + erros de domínio
+│   │   │   │   ├── user_repository.go
+│   │   │   │   ├── movie_repository.go
+│   │   │   │   └── errors.go     # Erros centralizados
+│   │   │   └── valueobject/       # Value Objects imutáveis
+│   │   │       ├── email.go      # Email com validação
+│   │   │       └── password.go   # Password com hash/verify
+│   │   │
+│   │   ├── usecase/              # 📋 Camada de Aplicação
+│   │   │   ├── account/          # Casos de uso de conta
+│   │   │   │   ├── register.go
+│   │   │   │   ├── authenticate.go
+│   │   │   │   ├── get_favorites.go
+│   │   │   │   ├── get_watchlist.go
+│   │   │   │   └── save_to_collection.go
+│   │   │   └── movie/            # Casos de uso de filmes
+│   │   │       ├── get_top_movies.go
+│   │   │       ├── get_random_movies.go
+│   │   │       ├── get_movie_by_id.go
+│   │   │       ├── search_movies.go
+│   │   │       └── get_genres.go
+│   │   │
+│   │   ├── handler/              # 🌐 Camada de Interface (HTTP)
+│   │   │   ├── account_handler.go # Endpoints de conta
+│   │   │   └── movie_handler.go  # Endpoints de filmes
+│   │   │
+│   │   └── infrastructure/       # 🔧 Camada de Infraestrutura
+│   │       └── postgres/         # Implementação PostgreSQL
+│   │           ├── account_repository.go
+│   │           └── movie_repository.go
 │   │
-│   ├── handler/                  # 🌐 Camada de Interface (HTTP)
-│   │   ├── account_handler.go    # Endpoints de conta
-│   │   └── movie_handler.go      # Endpoints de filmes
+│   ├── pkg/                      # Pacotes reutilizáveis
+│   │   ├── logger/               # Logging
+│   │   │   └── logger.go
+│   │   └── token/                # JWT utilities
+│   │       ├── creation.go
+│   │       └── getsecret.go
 │   │
-│   └── infrastructure/           # 🔧 Camada de Infraestrutura
-│       └── postgres/             # Implementação PostgreSQL
-│           ├── account_repository.go
-│           └── movie_repository.go
+│   ├── models/                   # DTOs (Data Transfer Objects)
+│   │   ├── user.go               # DTO para API/persistência
+│   │   ├── movie.go
+│   │   ├── actor.go
+│   │   └── genre.go
+│   │
+│   ├── database/                 # Scripts de banco de dados
+│   │   ├── import/
+│   │   │   ├── database-dump.sql
+│   │   │   └── install.go
+│   │   └── data/                 # Dados do PostgreSQL (volume)
+│   │
+│   ├── go.mod                    # Dependências Go
+│   └── go.sum
 │
-├── pkg/                          # Pacotes reutilizáveis
-│   ├── logger/                   # Logging
-│   │   └── logger.go
-│   └── token/                    # JWT utilities
-│       ├── creation.go
-│       └── getsecret.go
+├── web/                          # 🎨 Frontend (código fonte)
+│   ├── src/                      # Código fonte JavaScript
+│   │   ├── app.js                # Entry point da aplicação
+│   │   ├── components/           # Web Components
+│   │   │   ├── HomePage.js
+│   │   │   ├── MovieDetailsPage.js
+│   │   │   ├── MoviesPage.js
+│   │   │   ├── AccountPage.js
+│   │   │   └── ...
+│   │   └── services/             # Serviços frontend
+│   │       ├── API.js            # Cliente HTTP para backend
+│   │       ├── Router.js         # Roteamento SPA
+│   │       ├── Routes.js          # Definição de rotas
+│   │       └── Store.js           # Estado da aplicação
+│   ├── index.html                # HTML principal
+│   ├── styles.css                # Estilos CSS
+│   ├── app.webmanifest           # PWA manifest
+│   └── images/                   # Assets de imagem
 │
-├── models/                       # DTOs (Data Transfer Objects)
-│   ├── user.go                   # DTO para API/persistência
-│   ├── movie.go
-│   ├── actor.go
-│   └── genre.go
-│
-├── database/                     # Scripts de banco de dados
-│   └── import/
-│       ├── database-dump.sql
-│       └── install.go
-│
-├── public/                       # Frontend SPA
-│   ├── index.html
-│   ├── app.js
-│   ├── styles.css
+├── public/                       # 📦 Build/Dist (gerado pelo build.sh)
+│   ├── index.html                # HTML otimizado
+│   ├── app.js                    # JavaScript bundle
+│   ├── styles.css                # CSS otimizado
 │   ├── components/               # Web Components
-│   └── services/                 # Serviços frontend
+│   ├── services/                 # Serviços frontend
+│   ├── images/                   # Assets de imagem
+│   └── app.webmanifest           # PWA manifest
 │
+├── build.sh                      # Script de build (web/ → public/)
+├── Dockerfile                    # Build da aplicação
+├── docker-compose.yaml           # Orquestração de containers
+├── .air.toml                     # Configuração do Air (live reload)
+├── .env.example                  # Exemplo de variáveis de ambiente
 └── docs/                         # Documentação
+    └── PROJECT_ARCHITECTURE.MD   # Este arquivo
 ```
+
+### Separação Frontend/Backend
+
+O projeto segue uma separação clara entre frontend e backend:
+
+- **`server/`**: Todo o código backend em Go, seguindo Clean Architecture
+- **`web/`**: Código fonte do frontend (Vanilla JavaScript) - onde você desenvolve
+- **`public/`**: Build/dist do frontend - arquivos otimizados servidos pelo backend
+
+**Workflow de Build:**
+
+1. Desenvolve o frontend em `web/`
+2. Executa `./build.sh` para gerar `public/`
+3. O servidor Go serve os arquivos de `public/` como arquivos estáticos
+
+**Nota**: A pasta `public/` é gerada automaticamente e não deve ser versionada (está no `.gitignore`).
+
+---
+
+## Processo de Build e Deploy
+
+### Desenvolvimento
+
+1. **Frontend**: Edite os arquivos em `web/` diretamente
+2. **Build**: Execute `./build.sh` para gerar `public/`
+3. **Backend**: O código em `server/` é compilado e executado pelo Air (live reload)
+
+### Produção
+
+O `Dockerfile` automatiza o processo:
+
+- **Stage 1 (dev)**: Monta volumes para desenvolvimento com hot reload
+- **Stage 2 (builder)**: Compila o backend Go e executa `build.sh` para gerar `public/`
+- **Stage 3 (prod)**: Imagem mínima com binário Go e arquivos estáticos de `public/`
 
 ---
 
@@ -247,11 +313,11 @@ graph TD
 
 ## Models vs Entities
 
-| Aspecto           | `models/` (DTOs)              | `internal/domain/entity/` |
-| ----------------- | ----------------------------- | ------------------------- |
-| **Campos**        | Públicos                      | Privados                  |
-| **Comportamento** | Nenhum                        | Métodos de negócio        |
-| **Uso**           | Serialização JSON, Scan do DB | Lógica de domínio         |
-| **Mutabilidade**  | Livre                         | Controlada por métodos    |
+| Aspecto           | `server/models/` (DTOs)       | `server/internal/domain/entity/` |
+| ----------------- | ----------------------------- | -------------------------------- |
+| **Campos**        | Públicos                      | Privados                         |
+| **Comportamento** | Nenhum                        | Métodos de negócio               |
+| **Uso**           | Serialização JSON, Scan do DB | Lógica de domínio                |
+| **Mutabilidade**  | Livre                         | Controlada por métodos           |
 
 O `mapper.go` converte entre DTOs e Entities quando necessário.
