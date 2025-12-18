@@ -344,18 +344,15 @@ sequenceDiagram
     participant Network as Rede/Backend
 
     App->>SW: Requisição de Recurso
+    SW->>Cache: Verifica se existe cache
 
-    alt Recurso em Cache
-        SW->>Cache: Busca versão cached
+    alt Cache existe
         Cache-->>SW: Retorna versão stale
         SW-->>App: Resposta imediata (stale)
-
-        par Atualização em Background
-            SW->>Network: Busca versão atualizada
-            Network-->>SW: Nova versão
-            SW->>Cache: Atualiza cache
-        end
-    else Recurso não está em Cache
+        SW->>Network: Busca versão atualizada (background)
+        Network-->>SW: Nova versão
+        SW->>Cache: Atualiza cache
+    else Cache não existe
         SW->>Network: Busca recurso
         Network-->>SW: Resposta
         SW->>Cache: Armazena no cache
@@ -377,21 +374,16 @@ sequenceDiagram
     participant API as Backend API
 
     App->>SW: Requisição /api/*
-
     SW->>API: Tenta rede primeiro
 
-    alt Rede Disponível
+    alt Rede disponível
         API-->>SW: Resposta atualizada
         SW->>Cache: Atualiza cache
         SW-->>App: Retorna resposta da rede
-    else Rede Indisponível
+    else Rede indisponível
         SW->>Cache: Busca versão cached
-        alt Cache Disponível
-            Cache-->>SW: Versão cached
-            SW-->>App: Retorna cache (fallback offline)
-        else Sem Cache
-            SW-->>App: Erro (sem rede e sem cache)
-        end
+        Cache-->>SW: Versão cached ou null
+        SW-->>App: Retorna cache ou erro
     end
 
     Note over App,API: Prioriza dados atualizados<br/>com fallback offline
