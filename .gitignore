@@ -5,3 +5,10 @@ server/database/data
 
 # Build output
 public/
+
+# Dependencies
+node_modules/
+web/node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

@@ -24,6 +24,19 @@ CMD ["air", "-c", ".air.toml"]
 # ============================================
 # Stage 2: Builder para produção
 # ============================================
+FROM node:20-alpine AS frontend-builder
+
+WORKDIR /build-frontend
+
+# Copy web source
+COPY web/ ./
+
+# Install dependencies and build
+RUN npm install && npm run build
+
+# ============================================
+# Stage 3: Backend builder
+# ============================================
 FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
@@ -41,16 +54,11 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
     -o /app/server \
     ./cmd/api/main.go
 
-# Build frontend: copy web source and build script, then build
-COPY web/ /build-frontend/web/
-COPY build.sh /build-frontend/build.sh
-RUN chmod +x /build-frontend/build.sh && \
-    cd /build-frontend && \
-    ./build.sh && \
-    mv public /app/public
+# Copy built frontend from frontend-builder stage
+COPY --from=frontend-builder /build-frontend/public ./public
 
 # ============================================
-# Stage 3: Imagem final de produção (mínima)
+# Stage 4: Imagem final de produção (mínima)
 # ============================================
 FROM alpine:3.19 AS prod
 

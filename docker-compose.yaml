@@ -11,8 +11,8 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
-      - ./database/data:/var/lib/postgresql/data
-      - ./database/migrations:/migrations:ro
+      - ./server/database/data:/var/lib/postgresql/data
+      - ./server/database/migrations:/migrations:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app}"]
       interval: 10s
@@ -46,6 +46,17 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - dev_network
+
+  web:
+    image: node:20-alpine
+    working_dir: /app/web
+    volumes:
+      - ./web:/app/web
+      - ./public:/app/public
+      - /app/web/node_modules
+    command: sh -c "npm install && npm run dev"
     networks:
       - dev_network
 
