@@ -133,6 +133,8 @@ movies/
 │   │       ├── Router.js         # Roteamento SPA
 │   │       ├── Routes.js          # Definição de rotas
 │   │       └── Store.js           # Estado da aplicação
+│   ├── public/                   # Arquivos públicos
+│   │   └── sw.js                 # Service Worker (cache SWR)
 │   ├── index.html                # HTML principal
 │   ├── styles.css                # Estilos CSS
 │   ├── app.webmanifest           # PWA manifest
@@ -142,6 +144,7 @@ movies/
 │   ├── index.html                # HTML otimizado
 │   ├── app.js                    # JavaScript bundle
 │   ├── styles.css                # CSS otimizado
+│   ├── sw.js                     # Service Worker (cache SWR)
 │   ├── components/               # Web Components
 │   ├── services/                 # Serviços frontend
 │   ├── images/                   # Assets de imagem
@@ -167,10 +170,45 @@ O projeto segue uma separação clara entre frontend e backend:
 **Workflow de Build:**
 
 1. Desenvolve o frontend em `web/`
-2. Executa `./build.sh` para gerar `public/`
+2. Executa `npm run build` na pasta `/web` para gerar `public/`
 3. O servidor Go serve os arquivos de `public/` como arquivos estáticos
 
 **Nota**: A pasta `public/` é gerada automaticamente e não deve ser versionada (está no `.gitignore`).
+
+---
+
+## Service Worker e Cache Strategy
+
+O projeto implementa um **Service Worker** (`web/public/sw.js`) que atua como uma camada intermediária entre o frontend e a rede, proporcionando cache offline e melhor performance através da estratégia **SWR (Stale-While-Revalidate)**.
+
+### Funcionalidades do Service Worker
+
+1. **Cache Versionado**: Utiliza cache nomeado (`movies-cache-v1`) para facilitar atualizações e limpeza de caches antigos
+2. **Estratégia SWR**: Para a maioria das requisições, retorna imediatamente a versão em cache (stale) enquanto busca uma versão atualizada em background
+3. **Network-First para APIs**: Requisições para `/api/` utilizam estratégia network-first com fallback para cache
+4. **Ativação Imediata**: Utiliza `skipWaiting()` e `clients.claim()` para ativação imediata após instalação
+
+### Estratégias de Cache Implementadas
+
+#### 1. Stale-While-Revalidate (SWR) - Requisições Gerais
+
+- **Comportamento**: Retorna cache imediatamente se disponível, enquanto busca atualização em background
+- **Aplicação**: Todos os recursos exceto `/api/`
+- **Benefício**: Resposta instantânea ao usuário com dados atualizados em background
+
+#### 2. Network-First com Cache Fallback - APIs
+
+- **Comportamento**: Tenta rede primeiro, usa cache apenas se a rede falhar
+- **Aplicação**: Todas as requisições para `/api/`
+- **Benefício**: Garante dados atualizados quando possível, com fallback offline
+
+### Registro do Service Worker
+
+O Service Worker é registrado automaticamente na inicialização da aplicação (`app.js`):
+
+```javascript
+navigator.serviceWorker.register("/sw.js");
+```
 
 ---
 
@@ -208,6 +246,11 @@ graph TD
     end
 
     UI[HTML/CSS Interface]
+  end
+
+  subgraph SW [Service Worker Layer]
+    SW[Service Worker<br/>sw.js]
+    Cache[Cache Storage<br/>movies-cache-v1]
   end
 
   subgraph Backend [Backend - Clean Architecture]
@@ -251,9 +294,12 @@ graph TD
   Pages --> UI
   Shared --> UI
 
-  %% Frontend to Backend
-  API -- HTTP/JSON --> HTTP
-  UI -- Static Assets --> HTTP
+  %% Service Worker Interception
+  API -- HTTP Requests --> SW
+  UI -- Static Assets --> SW
+  SW --> Cache
+  SW -- SWR Strategy --> HTTP
+  SW -- Network-First --> HTTP
 
   %% Backend Flow (Dependency Direction: Outside → Inside)
   HTTP --> UC
@@ -277,11 +323,78 @@ graph TD
   classDef application fill:#fff3e0,stroke:#e65100
   classDef interface fill:#f3e5f5,stroke:#4a148c
   classDef infra fill:#e8f5e9,stroke:#1b5e20
+  classDef sw fill:#fff9c4,stroke:#f57f17
 
   class Entities,VO,RepoInterface domain
   class UC application
   class HTTP interface
   class RepoImpl,Logger,Token infra
+  class SW,Cache sw
+```
+
+### Estratégia SWR (Stale-While-Revalidate)
+
+O diagrama abaixo detalha o fluxo da estratégia SWR implementada pelo Service Worker:
+
+```mermaid
+sequenceDiagram
+    participant App as Aplicação Frontend
+    participant SW as Service Worker
+    participant Cache as Cache Storage
+    participant Network as Rede/Backend
+
+    App->>SW: Requisição de Recurso
+
+    alt Recurso em Cache
+        SW->>Cache: Busca versão cached
+        Cache-->>SW: Retorna versão stale
+        SW-->>App: Resposta imediata (stale)
+
+        par Atualização em Background
+            SW->>Network: Busca versão atualizada
+            Network-->>SW: Nova versão
+            SW->>Cache: Atualiza cache
+        end
+    else Recurso não está em Cache
+        SW->>Network: Busca recurso
+        Network-->>SW: Resposta
+        SW->>Cache: Armazena no cache
+        SW-->>App: Retorna resposta
+    end
+
+    Note over App,Network: Usuário recebe resposta instantânea<br/>Cache é atualizado em background
+```
+
+### Estratégia Network-First para APIs
+
+Para requisições de API (`/api/*`), o Service Worker utiliza uma estratégia diferente:
+
+```mermaid
+sequenceDiagram
+    participant App as Aplicação Frontend
+    participant SW as Service Worker
+    participant Cache as Cache Storage
+    participant API as Backend API
+
+    App->>SW: Requisição /api/*
+
+    SW->>API: Tenta rede primeiro
+
+    alt Rede Disponível
+        API-->>SW: Resposta atualizada
+        SW->>Cache: Atualiza cache
+        SW-->>App: Retorna resposta da rede
+    else Rede Indisponível
+        SW->>Cache: Busca versão cached
+        alt Cache Disponível
+            Cache-->>SW: Versão cached
+            SW-->>App: Retorna cache (fallback offline)
+        else Sem Cache
+            SW-->>App: Erro (sem rede e sem cache)
+        end
+    end
+
+    Note over App,API: Prioriza dados atualizados<br/>com fallback offline
 ```
 
 ---

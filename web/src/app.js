@@ -115,4 +115,5 @@ window.app = {
 
 window.addEventListener("DOMContentLoaded", () => {
   app.Router.init();
+  navigator.serviceWorker.register("/sw.js");
 });
