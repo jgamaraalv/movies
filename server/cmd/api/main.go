@@ -61,6 +61,18 @@ func main() {
 	movieHandler := handler.NewMovieHandler(movieRepo, logInstance)
 	accountHandler := handler.NewAccountHandler(accountRepo, logInstance)
 
+	// Health check endpoint for Docker/Kubernetes probes
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		if err := db.Ping(); err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			w.Write([]byte(`{"status":"unhealthy","error":"database connection failed"}`))
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"healthy"}`))
+	})
+
 	// Set up routes
 	http.HandleFunc("/api/account/register/", accountHandler.Register)
 	http.HandleFunc("/api/account/authenticate/", accountHandler.Authenticate)
@@ -110,9 +122,27 @@ func main() {
 }
 
 func initializeLogger() *logger.Logger {
-	logInstance, err := logger.NewLogger("movie-service.log")
+	// Define o caminho do arquivo de log
+	// Em produção com filesystem read-only, usa /app/logs ou /tmp
+	logPath := os.Getenv("LOG_PATH")
+	if logPath == "" {
+		// Tenta /app/logs primeiro (tmpfs em produção)
+		if _, err := os.Stat("/app/logs"); err == nil {
+			logPath = "/app/logs/movie-service.log"
+		} else if _, err := os.Stat("/tmp"); err == nil {
+			// Fallback para /tmp
+			logPath = "/tmp/movie-service.log"
+		} else {
+			// Último fallback: diretório atual (desenvolvimento)
+			logPath = "movie-service.log"
+		}
+	}
+
+	logInstance, err := logger.NewLogger(logPath)
 	if err != nil {
-		log.Fatalf("Failed to initialize logger: %v", err)
+		log.Printf("Warning: Failed to initialize file logger at %s: %v. Using stdout only.", logPath, err)
+		// Fallback: cria um logger que só usa stdout
+		logInstance, _ = logger.NewLogger("/dev/null")
 	}
 	return logInstance
 }

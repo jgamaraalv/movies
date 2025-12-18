@@ -1,6 +1,3 @@
-# ============================================
-# Stage 1: Base para desenvolvimento
-# ============================================
 FROM golang:1.24-alpine AS dev
 
 WORKDIR /app
@@ -8,71 +5,77 @@ WORKDIR /app
 RUN apk add --no-cache git bash && \
     go install github.com/cosmtrek/air@v1.49.0
 
-# Copy Go modules (for initial download, volumes will override)
 COPY server/go.mod server/go.sum ./
+
 RUN go mod download
 
-# Copy .air.toml (needed for air to work)
 COPY .air.toml ./
 
 EXPOSE 8080
 
-# Note: server/ and web/ are mounted via volumes in docker-compose
-# The build script should be run manually or via a separate step
 CMD ["air", "-c", ".air.toml"]
 
-# ============================================
-# Stage 2: Builder para produção
-# ============================================
 FROM node:20-alpine AS frontend-builder
+
+LABEL stage="frontend-builder"
+LABEL maintainer="Movies App Team"
 
 WORKDIR /build-frontend
 
-# Copy web source
+COPY web/package*.json ./
+
+RUN npm ci --frozen-lockfile
+
 COPY web/ ./
 
-# Install dependencies and build
-RUN npm install && npm run build
+ENV NODE_ENV=production
 
-# ============================================
-# Stage 3: Backend builder
-# ============================================
-FROM golang:1.24-alpine AS builder
+RUN mkdir -p dist && \
+    npx vite build --outDir ./dist
+
+
+FROM golang:1.24-alpine AS backend-builder
+
+LABEL stage="backend-builder"
 
 WORKDIR /app
 
-# Copy Go modules
-COPY server/go.mod server/go.sum ./
-RUN go mod download
+RUN apk add --no-cache ca-certificates tzdata git
 
-# Copy server code
+COPY server/go.mod server/go.sum ./
+
+RUN go mod download && \
+    go mod verify
+
 COPY server/ ./
 
-# Build otimizado para produção
-RUN CGO_ENABLED=0 GOOS=linux go build \
-    -ldflags="-w -s" \
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags="-w -s -extldflags '-static'" \
+    -trimpath \
     -o /app/server \
     ./cmd/api/main.go
 
-# Copy built frontend from frontend-builder stage
-COPY --from=frontend-builder /build-frontend/public ./public
+COPY --from=frontend-builder /build-frontend/dist ./public
 
-# ============================================
-# Stage 4: Imagem final de produção (mínima)
-# ============================================
-FROM alpine:3.19 AS prod
+FROM alpine:3.21 AS prod
+
+LABEL org.opencontainers.image.title="Movies App"
+LABEL org.opencontainers.image.description="Full-stack movie listing application"
+LABEL org.opencontainers.image.authors="Movies App Team"
+LABEL org.opencontainers.image.source="https://github.com/jgamaraalv/movies"
+LABEL org.opencontainers.image.licenses="MIT"
 
 RUN apk --no-cache add ca-certificates tzdata
 
 WORKDIR /app
 
-# Copia apenas o binário compilado
-COPY --from=builder /app/server .
-# Copia arquivos estáticos (build do frontend)
-COPY --from=builder /app/public ./public
+RUN addgroup -g 10001 -S appgroup && \
+    adduser -u 10001 -S -G appgroup -h /app -s /sbin/nologin appuser
 
-# Usuário não-root para segurança
-RUN adduser -D -g '' appuser
+COPY --from=backend-builder --chown=appuser:appgroup /app/server .
+
+COPY --from=backend-builder --chown=appuser:appgroup /app/public ./public
+
 USER appuser
 
 EXPOSE 8080

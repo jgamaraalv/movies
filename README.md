@@ -55,6 +55,9 @@ movies/
 │   ├── index.html
 │   └── package.json
 │
+├── .github/workflows/  # CI/CD com GitHub Actions
+│   └── ci-cd.yaml     # Pipeline de CI/CD
+│
 └── public/             # Build/dist (gerado automaticamente)
 ```
 
@@ -80,6 +83,8 @@ Para mais detalhes sobre a arquitetura, consulte a [documentação completa](doc
 
 - **Docker** - Containerização
 - **Docker Compose** - Orquestração de containers
+- **GitHub Actions** - CI/CD automatizado
+- **GitHub Container Registry** - Armazenamento de imagens Docker
 
 ## Pré-requisitos
 
@@ -114,11 +119,18 @@ cp .env.example .env
 Edite o `.env` com suas configurações:
 
 ```env
+# Banco de Dados
 POSTGRES_USER=seu_usuario
-POSTGRES_PASSWORD=sua_senha
+POSTGRES_PASSWORD=sua_senha_segura
 POSTGRES_DB=movies_db
-DATABASE_URL=postgres://seu_usuario:sua_senha@postgres:5432/movies_db?sslmode=disable
-JWT_SECRET=seu_secret_jwt_aqui
+
+# Aplicação
+JWT_SECRET=seu_secret_jwt_muito_seguro_aqui
+
+# Opcional (produção)
+DOCKER_REGISTRY=ghcr.io/seu-usuario
+VERSION=latest
+APP_PORT=8080
 ```
 
 ## Desenvolvimento
@@ -184,27 +196,198 @@ docker-compose up postgres app -d
 docker exec movies-app-1 go run ./database/import/install.go
 ```
 
+---
+
 ## Produção
 
-### Build de Produção
+### Arquitetura Docker de Produção
 
-Para gerar os arquivos otimizados do frontend:
+O projeto utiliza um **Dockerfile multi-stage** otimizado para produção:
 
-```bash
-cd web
-npm install
-npm run build
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    MULTI-STAGE BUILD                        │
+├─────────────────────────────────────────────────────────────┤
+│  Stage 1: dev             │ Ambiente de desenvolvimento     │
+│  Stage 2: frontend-builder│ Build do frontend (Vite)        │
+│  Stage 3: backend-builder │ Compilação do Go                │
+│  Stage 4: prod            │ Imagem final (~20MB)            │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-Isso gerará arquivos minificados e otimizados em `public/`.
+### Características de Segurança
 
-### Deploy com Docker
+| Recurso                 | Descrição                                    |
+| ----------------------- | -------------------------------------------- |
+| 🔒 Usuário não-root     | Container executa como `appuser` (UID 10001) |
+| 📁 Filesystem read-only | Sistema de arquivos em modo somente leitura  |
+| 🚫 no-new-privileges    | Impede escalação de privilégios              |
+| 🗑️ CAP_DROP ALL         | Remove todas as capabilities Linux           |
+| 🌐 Rede isolada         | Serviços em rede interna sem acesso externo  |
+| 📊 Resource limits      | Limites de CPU e memória por container       |
+| 🩺 Health checks        | Verificação contínua de saúde dos serviços   |
+| 📝 Logging estruturado  | Logs com rotação automática                  |
 
-O projeto inclui um `Dockerfile` multi-stage otimizado para produção:
+### Deploy Manual com Docker Compose
 
 ```bash
-docker-compose -f docker-compose.prod.yaml up -d --build
+# Build e inicialização dos containers de produção
+docker compose -f docker-compose.prod.yaml up -d --build
+
+# Verificar status dos containers
+docker compose -f docker-compose.prod.yaml ps
+
+# Ver logs em tempo real
+docker compose -f docker-compose.prod.yaml logs -f
+
+# Parar serviços
+docker compose -f docker-compose.prod.yaml down
 ```
+
+### Inicialização do Banco de Dados
+
+> ** Automático em Produção**: O banco de dados é inicializado automaticamente na primeira execução!
+
+O `docker-compose.prod.yaml` monta o arquivo `database-dump.sql` no diretório `/docker-entrypoint-initdb.d/` do PostgreSQL. Isso faz com que o script SQL seja executado **automaticamente** quando o volume do banco é criado pela primeira vez.
+
+```yaml
+# Configuração no docker-compose.prod.yaml
+volumes:
+  - ./server/database/import/database-dump.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+```
+
+**Comportamento:**
+
+- **Primeiro deploy**: O banco é criado e populado automaticamente com ~4.800 filmes
+- **Deploys subsequentes**: O volume persiste e os dados são mantidos
+- **Reset do banco**: Use `docker compose -f docker-compose.prod.yaml down -v` para remover o volume e reinicializar
+
+**Verificar se o banco foi inicializado:**
+
+```bash
+# Verificar se as tabelas existem
+docker exec movies-postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -c "\dt"
+
+# Contar registros
+docker exec movies-postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -c "SELECT COUNT(*) FROM movies;"
+```
+
+### Variáveis de Ambiente para Produção
+
+Crie um arquivo `.env` com as seguintes variáveis:
+
+```env
+# === OBRIGATÓRIAS ===
+POSTGRES_USER=movies_prod
+POSTGRES_PASSWORD=<senha-forte-aqui>
+POSTGRES_DB=movies_production
+JWT_SECRET=<secret-jwt-forte-de-256-bits>
+
+# === OPCIONAIS ===
+# Registry Docker (para CI/CD)
+DOCKER_REGISTRY=ghcr.io/seu-usuario
+
+# Versão da imagem (SHA do commit ou tag semântica)
+VERSION=latest
+
+# Porta da aplicação (padrão: 8080)
+APP_PORT=8080
+```
+
+### Verificar Saúde dos Containers
+
+```bash
+# Verificar health check da aplicação
+curl http://localhost:8080/health
+
+# Resposta esperada:
+# {"status":"healthy"}
+
+# Verificar health de todos os containers
+docker compose -f docker-compose.prod.yaml ps
+```
+
+---
+
+## CI/CD com GitHub Actions
+
+O projeto inclui um pipeline completo de CI/CD configurado em `.github/workflows/ci-cd.yaml`.
+
+### Pipeline Overview
+
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   Test      │───▶│   Build     │───▶│   Scan      │───▶│   Deploy    │
+│  Backend    │    │   Docker    │    │   Trivy     │    │  (manual)   │
+│  Frontend   │    │   Image     │    │   SARIF     │    │             │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+```
+
+### Funcionalidades do Pipeline
+
+| Etapa             | Descrição                                               |
+| ----------------- | ------------------------------------------------------- |
+| **Test Backend**  | Testes Go, linting, verificação de formatação           |
+| **Test Frontend** | Build de verificação do Vite                            |
+| **Build & Push**  | Build multi-stage e push para GitHub Container Registry |
+| **Security Scan** | Scan de vulnerabilidades com Trivy                      |
+| **Deploy**        | Deploy automático (configurável)                        |
+
+### Triggers do Pipeline
+
+- **Push para `main`**: Executa pipeline completo com deploy
+- **Pull Request**: Executa apenas testes (sem deploy)
+- **Manual**: Permite execução via GitHub UI
+
+### Configurar GitHub Secrets
+
+Para o pipeline funcionar, configure os seguintes secrets no GitHub:
+
+| Secret           | Descrição                                 |
+| ---------------- | ----------------------------------------- |
+| `GITHUB_TOKEN`   | Automático (não precisa configurar)       |
+| `SERVER_HOST`    | IP/hostname do servidor (para deploy SSH) |
+| `SERVER_USER`    | Usuário SSH do servidor                   |
+| `SERVER_SSH_KEY` | Chave SSH privada para deploy             |
+
+### Deploy Automático
+
+O pipeline está configurado com múltiplas opções de deploy:
+
+#### Opção 1: Deploy via SSH para VPS/VM
+
+Descomente a seção no workflow e configure os secrets:
+
+```yaml
+- name: 🚀 Deploy to server
+  uses: appleboy/ssh-action@v1.0.3
+  with:
+    host: ${{ secrets.SERVER_HOST }}
+    username: ${{ secrets.SERVER_USER }}
+    key: ${{ secrets.SERVER_SSH_KEY }}
+    script: |
+      cd /opt/movies
+      docker compose -f docker-compose.prod.yaml pull
+      docker compose -f docker-compose.prod.yaml up -d
+```
+
+#### Opção 2: Deploy para Plataformas PaaS
+
+O pipeline pode ser adaptado para:
+
+- **Fly.io**: `flyctl deploy`
+- **Railway**: API de deploy
+- **Render**: Webhook de deploy
+- **DigitalOcean App Platform**: API de deploy
+
+### Executar Pipeline Manualmente
+
+1. Vá para **Actions** no repositório GitHub
+2. Selecione **CI/CD Pipeline**
+3. Clique em **Run workflow**
+4. Escolha o ambiente de deploy
+
+---
 
 ## Scripts NPM
 
@@ -217,6 +400,10 @@ Na pasta `web/`:
 | `npm run preview` | Preview do build de produção localmente    |
 
 ## API Endpoints
+
+### Health Check
+
+- `GET /health` - Verifica saúde da aplicação e conexão com banco
 
 ### Autenticação
 
@@ -249,18 +436,72 @@ _Seção para testes quando implementados_
 - [Diagrama de Entidade-Relacionamento](docs/ENTITY_RELATION_DIAGRAM.MD) - Estrutura do banco de dados
 - [Guia de Performance Frontend](docs/FRONTEND_PERFORMANCE_GUIDE.md) - Otimizações e boas práticas
 
+## Comandos Úteis
+
+### Desenvolvimento
+
+```bash
+# Subir ambiente de desenvolvimento
+docker compose up -d --build
+
+# Ver logs em tempo real
+docker compose logs -f app
+
+# Executar comando dentro do container
+docker exec -it movies-app-1 sh
+
+# Rebuild apenas o backend
+docker compose up -d --build app
+```
+
+### Produção
+
+```bash
+# Build de produção
+docker compose -f docker-compose.prod.yaml build
+
+# Deploy com nova versão
+VERSION=v1.0.0 docker compose -f docker-compose.prod.yaml up -d
+
+# Verificar recursos dos containers
+docker stats
+
+# Backup do banco de dados
+docker exec movies-postgres pg_dump -U $POSTGRES_USER $POSTGRES_DB > backup.sql
+```
+
+### Manutenção
+
+```bash
+# Limpar imagens não utilizadas
+docker image prune -a
+
+# Limpar volumes órfãos
+docker volume prune
+
+# Ver uso de disco
+docker system df
+
+# Logs do sistema
+docker compose -f docker-compose.prod.yaml logs --tail=100
+```
+
 ## Parar a Aplicação
 
 Para parar e remover os containers:
 
 ```bash
-docker-compose down
+# Desenvolvimento
+docker compose down
+
+# Produção
+docker compose -f docker-compose.prod.yaml down
 ```
 
 Para remover também os volumes (dados do banco):
 
 ```bash
-docker-compose down -v
+docker compose down -v
 ```
 
 ## Estrutura de Dados
@@ -275,7 +516,23 @@ docker-compose down -v
 
 ## Segurança
 
+### Aplicação
+
 - Senhas são hasheadas com bcrypt
 - Autenticação via JWT (JSON Web Tokens)
 - Validação de dados no backend (Value Objects)
 - Sanitização de inputs
+
+### Containers (Produção)
+
+- Usuário não-root em todos os containers
+- Filesystem read-only
+- Capabilities Linux removidas
+- Limites de recursos (CPU/memória)
+- Rede isolada entre serviços
+- Health checks ativos
+- Logging com rotação automática
+
+## Licença
+
+MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes.
