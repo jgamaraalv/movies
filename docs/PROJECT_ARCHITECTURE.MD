@@ -339,27 +339,24 @@ O diagrama abaixo detalha o fluxo da estratégia SWR implementada pelo Service W
 ```mermaid
 sequenceDiagram
     participant App as Aplicação Frontend
-    participant SW as Service Worker
+    participant ServiceWorker as Service Worker
     participant Cache as Cache Storage
     participant Network as Rede/Backend
 
-    App->>SW: Requisição de Recurso
-    SW->>Cache: Verifica se existe cache
+    App->>ServiceWorker: Requisição de Recurso
+    ServiceWorker->>Cache: Verifica cache
+    Cache-->>ServiceWorker: Resultado
 
-    alt Cache existe
-        Cache-->>SW: Retorna versão stale
-        SW-->>App: Resposta imediata (stale)
-        SW->>Network: Busca versão atualizada (background)
-        Network-->>SW: Nova versão
-        SW->>Cache: Atualiza cache
-    else Cache não existe
-        SW->>Network: Busca recurso
-        Network-->>SW: Resposta
-        SW->>Cache: Armazena no cache
-        SW-->>App: Retorna resposta
+    alt Cache encontrado
+        ServiceWorker-->>App: Resposta imediata (stale)
+    else Cache não encontrado
+        ServiceWorker->>Network: Busca recurso
+        Network-->>ServiceWorker: Resposta
+        ServiceWorker->>Cache: Armazena cache
+        ServiceWorker-->>App: Retorna resposta
     end
 
-    Note over App,Network: Usuário recebe resposta instantânea<br/>Cache é atualizado em background
+    Note over ServiceWorker,Network: Em background: atualiza cache<br/>com versão mais recente
 ```
 
 ### Estratégia Network-First para APIs
@@ -369,21 +366,21 @@ Para requisições de API (`/api/*`), o Service Worker utiliza uma estratégia d
 ```mermaid
 sequenceDiagram
     participant App as Aplicação Frontend
-    participant SW as Service Worker
+    participant ServiceWorker as Service Worker
     participant Cache as Cache Storage
     participant API as Backend API
 
-    App->>SW: Requisição /api/*
-    SW->>API: Tenta rede primeiro
+    App->>ServiceWorker: Requisição /api/*
+    ServiceWorker->>API: Tenta rede primeiro
 
     alt Rede disponível
-        API-->>SW: Resposta atualizada
-        SW->>Cache: Atualiza cache
-        SW-->>App: Retorna resposta da rede
+        API-->>ServiceWorker: Resposta atualizada
+        ServiceWorker->>Cache: Atualiza cache
+        ServiceWorker-->>App: Retorna resposta da rede
     else Rede indisponível
-        SW->>Cache: Busca versão cached
-        Cache-->>SW: Versão cached ou null
-        SW-->>App: Retorna cache ou erro
+        ServiceWorker->>Cache: Busca versão cached
+        Cache-->>ServiceWorker: Versão cached ou null
+        ServiceWorker-->>App: Retorna cache ou erro
     end
 
     Note over App,API: Prioriza dados atualizados<br/>com fallback offline
