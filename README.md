@@ -1,196 +1,197 @@
-# Movies - Aplicativo Web de Listagem de Filmes
+# Movies – Movie Listing Web Application
 
-Aplicativo web full-stack para listagem e gerenciamento de filmes, desenvolvido com **Go** e **Vanilla JavaScript**. Projeto com foco na aplicação de conceitos fundamentais de programação web e arquitetura de software, seguindo os princípios de **Clean Architecture** e **Domain-Driven Design (DDD)**.
+A full-stack web application for listing and managing movies, built with **Go** and **Vanilla JavaScript**. The project focuses on applying fundamental web programming and software architecture concepts, following the principles of **Clean Architecture** and **Domain-Driven Design (DDD)**.
 
-## Funcionalidades
+## Features
 
-- **Listagem de Filmes**
+* **Movie Listing**
 
-  - Top 10 filmes mais populares
-  - Filmes aleatórios para descoberta
-  - Busca avançada com filtros por gênero e ordenação
-  - Detalhes completos de cada filme (sinopse, elenco, trailer)
+  * Top 10 most popular movies
+  * Random movies for discovery
+  * Advanced search with genre filters and sorting
+  * Full movie details (synopsis, cast, trailer)
 
-- **Sistema de Autenticação**
+* **Authentication System**
 
-  - Cadastro de novos usuários
-  - Login seguro com JWT
-  - Gerenciamento de conta
+  * User registration
+  * Secure login with JWT
+  * Account management
 
-- **Coleções Pessoais**
-  - Adicionar filmes aos favoritos
-  - Criar lista de desejos (watchlist)
-  - Visualizar coleções pessoais
+* **Personal Collections**
 
-## Arquitetura
+  * Add movies to favorites
+  * Create a watchlist
+  * View personal collections
 
-O projeto segue os princípios de **Clean Architecture** e **DDD**, organizando o código em camadas bem definidas:
+## Architecture
 
-- **Domain Layer**: Entidades, Value Objects e interfaces de repositório
-- **Application Layer**: Casos de uso (use cases) que orquestram a lógica de negócio
-- **Interface Layer**: Handlers HTTP que processam requisições
-- **Infrastructure Layer**: Implementações concretas (PostgreSQL, logger, JWT)
+The project follows **Clean Architecture** and **DDD** principles, organizing the code into well-defined layers:
 
-### Estrutura do Projeto
+* **Domain Layer**: Entities, Value Objects, and repository interfaces
+* **Application Layer**: Use cases that orchestrate business logic
+* **Interface Layer**: HTTP handlers that process requests
+* **Infrastructure Layer**: Concrete implementations (PostgreSQL, logger, JWT)
+
+### Project Structure
 
 ```
 movies/
-├── server/              # Backend Go (Clean Architecture)
-│   ├── cmd/api/        # Entry point da aplicação
-│   ├── internal/        # Código interno
-│   │   ├── domain/     # Camada de domínio
-│   │   ├── usecase/    # Casos de uso
-│   │   ├── handler/    # Handlers HTTP
-│   │   └── infrastructure/  # Implementações
-│   ├── models/         # DTOs
-│   ├── pkg/           # Pacotes reutilizáveis
-│   └── database/      # Scripts de banco de dados
+├── server/              # Go backend (Clean Architecture)
+│   ├── cmd/api/         # Application entry point
+│   ├── internal/        # Internal code
+│   │   ├── domain/      # Domain layer
+│   │   ├── usecase/     # Use cases
+│   │   ├── handler/     # HTTP handlers
+│   │   └── infrastructure/  # Implementations
+│   ├── models/          # DTOs
+│   ├── pkg/             # Reusable packages
+│   └── database/        # Database scripts
 │
-├── web/                # Frontend (código fonte)
+├── web/                 # Frontend (source code)
 │   ├── src/
 │   │   ├── components/  # Web Components
-│   │   ├── services/    # Serviços (API, Router, Store)
+│   │   ├── services/    # Services (API, Router, Store)
 │   │   ├── app.js       # Entry point
-│   │   └── styles.css   # Estilos
+│   │   └── styles.css   # Styles
 │   ├── index.html
 │   └── package.json
 │
-├── .github/workflows/  # CI/CD com GitHub Actions
-│   └── ci-cd.yaml     # Pipeline de CI/CD
+├── .github/workflows/   # CI/CD with GitHub Actions
+│   └── ci-cd.yaml       # CI/CD pipeline
 │
-└── public/             # Build/dist (gerado automaticamente)
+└── public/              # Build/dist (auto-generated)
 ```
 
-Para mais detalhes sobre a arquitetura, consulte a [documentação completa](docs/PROJECT_ARCHITECTURE.MD).
+For more details about the architecture, see the [full documentation](docs/PROJECT_ARCHITECTURE.MD).
 
-## Tecnologias
+## Technologies
 
 ### Backend
 
-- **Go 1.24+** - Linguagem de programação
-- **PostgreSQL** - Banco de dados relacional
-- **JWT** - Autenticação e autorização
-- **Air** - Hot reload em desenvolvimento
+* **Go 1.24+** – Programming language
+* **PostgreSQL** – Relational database
+* **JWT** – Authentication and authorization
+* **Air** – Hot reload in development
 
 ### Frontend
 
-- **Vanilla JavaScript** - Sem frameworks, JavaScript puro
-- **ES Modules** - Módulos ES6 nativos
-- **Web Components** - Componentes reutilizáveis
-- **Vite 5.4+** - Build tool e otimizações
+* **Vanilla JavaScript** – No frameworks, pure JavaScript
+* **ES Modules** – Native ES6 modules
+* **Web Components** – Reusable components
+* **Vite 5.4+** – Build tool and optimizations
 
 ### DevOps
 
-- **Docker** - Containerização
-- **Docker Compose** - Orquestração de containers
-- **GitHub Actions** - CI/CD automatizado
-- **GitHub Container Registry** - Armazenamento de imagens Docker
+* **Docker** – Containerization
+* **Docker Compose** – Container orchestration
+* **GitHub Actions** – Automated CI/CD
+* **GitHub Container Registry** – Docker image registry
 
-## Pré-requisitos
+## Prerequisites
 
-### Para Desenvolvimento Local
+### For Local Development
 
-- **Docker** 20.10+
-- **Docker Compose** 2.0+
-- **Node.js** 20+ e **npm** (opcional, para desenvolvimento do frontend localmente)
+* **Docker** 20.10+
+* **Docker Compose** 2.0+
+* **Node.js** 20+ and **npm** (optional, for local frontend development)
 
-### Para Produção
+### For Production
 
-- **Docker** 20.10+
-- **Docker Compose** 2.0+
+* **Docker** 20.10+
+* **Docker Compose** 2.0+
 
-## Instalação e Configuração
+## Installation and Setup
 
-### 1. Clone o repositório
+### 1. Clone the repository
 
 ```bash
 git clone <repository-url>
 cd movies
 ```
 
-### 2. Configure as variáveis de ambiente
+### 2. Configure environment variables
 
-Crie um arquivo `.env` na raiz do projeto baseado no `.env.example`:
+Create a `.env` file at the project root based on `.env.example`:
 
 ```bash
 cp .env.example .env
 ```
 
-Edite o `.env` com suas configurações:
+Edit `.env` with your settings:
 
 ```env
-# Banco de Dados
-POSTGRES_USER=seu_usuario
-POSTGRES_PASSWORD=sua_senha_segura
+# Database
+POSTGRES_USER=your_user
+POSTGRES_PASSWORD=your_secure_password
 POSTGRES_DB=movies_db
 
-# Aplicação
-JWT_SECRET=seu_secret_jwt_muito_seguro_aqui
+# Application
+JWT_SECRET=your_very_secure_jwt_secret_here
 
-# Opcional (produção)
-DOCKER_REGISTRY=ghcr.io/seu-usuario
+# Optional (production)
+DOCKER_REGISTRY=ghcr.io/your-user
 VERSION=latest
 APP_PORT=8080
 ```
 
-## Desenvolvimento
+## Development
 
-### Opção 1: Tudo no Docker (Recomendado)
+### Option 1: Everything in Docker (Recommended)
 
-Esta é a forma mais simples e recomendada para desenvolvimento:
+This is the simplest and recommended way to develop:
 
 ```bash
-# Subir todos os serviços
+# Start all services
 docker-compose up -d --build
 ```
 
-Isso iniciará:
+This will start:
 
-- **Backend Go** na porta `8080` com hot reload (Air)
-- **Frontend Vite** em watch mode, buildando automaticamente para `public/`
-- **PostgreSQL** na porta `5432`
+* **Go backend** on port `8080` with hot reload (Air)
+* **Vite frontend** in watch mode, automatically building to `public/`
+* **PostgreSQL** on port `5432`
 
-A aplicação estará disponível em `http://localhost:8080`.
+The application will be available at `http://localhost:8080`.
 
-#### Inicializar o banco de dados
+#### Initialize the database
 
-Na primeira execução, é necessário popular o banco de dados:
+On first run, you must populate the database:
 
 ```bash
 docker exec movies-app-1 go run ./database/import/install.go
 ```
 
-#### Desenvolvimento
+#### Development workflow
 
-- **Backend**: Alterações em arquivos `.go` reiniciam automaticamente (Air)
-- **Frontend**: Alterações em `web/` são buildadas automaticamente para `public/` (Vite watch mode)
+* **Backend**: Changes to `.go` files automatically restart the server (Air)
+* **Frontend**: Changes in `web/` are automatically built to `public/` (Vite watch mode)
 
-### Opção 2: Desenvolvimento Híbrido
+### Option 2: Hybrid Development
 
-Para desenvolvimento do frontend localmente (sem Docker):
+For local frontend development (without Docker):
 
-#### 1. Instalar dependências do frontend
+#### 1. Install frontend dependencies
 
 ```bash
 cd web
 npm install
 ```
 
-#### 2. Rodar build em watch mode
+#### 2. Run build in watch mode
 
 ```bash
 npm run dev
 ```
 
-Isso observará mudanças em `web/` e buildará automaticamente para `public/`.
+This will watch changes in `web/` and automatically build to `public/`.
 
-#### 3. Subir apenas backend e banco via Docker
+#### 3. Start only backend and database via Docker
 
 ```bash
 docker-compose up postgres app -d
 ```
 
-#### 4. Inicializar o banco de dados
+#### 4. Initialize the database
 
 ```bash
 docker exec movies-app-1 go run ./database/import/install.go
@@ -198,120 +199,120 @@ docker exec movies-app-1 go run ./database/import/install.go
 
 ---
 
-## Produção
+## Production
 
-### Arquitetura Docker de Produção
+### Production Docker Architecture
 
-O projeto utiliza um **Dockerfile multi-stage** otimizado para produção:
+The project uses an optimized **multi-stage Dockerfile** for production:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    MULTI-STAGE BUILD                        │
 ├─────────────────────────────────────────────────────────────┤
-│  Stage 1: dev             │ Ambiente de desenvolvimento     │
-│  Stage 2: frontend-builder│ Build do frontend (Vite)        │
-│  Stage 3: backend-builder │ Compilação do Go                │
-│  Stage 4: prod            │ Imagem final (~20MB)            │
+│  Stage 1: dev              │ Development environment        │
+│  Stage 2: frontend-builder │ Frontend build (Vite)          │
+│  Stage 3: backend-builder  │ Go compilation                 │
+│  Stage 4: prod             │ Final image (~20MB)            │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Características de Segurança
+### Security Features
 
-| Recurso                 | Descrição                                    |
-| ----------------------- | -------------------------------------------- |
-| 🔒 Usuário não-root     | Container executa como `appuser` (UID 10001) |
-| 📁 Filesystem read-only | Sistema de arquivos em modo somente leitura  |
-| 🚫 no-new-privileges    | Impede escalação de privilégios              |
-| 🗑️ CAP_DROP ALL         | Remove todas as capabilities Linux           |
-| 🌐 Rede isolada         | Serviços em rede interna sem acesso externo  |
-| 📊 Resource limits      | Limites de CPU e memória por container       |
-| 🩺 Health checks        | Verificação contínua de saúde dos serviços   |
-| 📝 Logging estruturado  | Logs com rotação automática                  |
+| Feature                 | Description                                      |
+| ----------------------- | ------------------------------------------------ |
+| 🔒 Non-root user        | Container runs as `appuser` (UID 10001)          |
+| 📁 Read-only filesystem | Filesystem in read-only mode                     |
+| 🚫 no-new-privileges    | Prevents privilege escalation                    |
+| 🗑️ CAP_DROP ALL        | Removes all Linux capabilities                   |
+| 🌐 Isolated network     | Internal service network with no external access |
+| 📊 Resource limits      | CPU and memory limits per container              |
+| 🩺 Health checks        | Continuous service health checks                 |
+| 📝 Structured logging   | Logs with automatic rotation                     |
 
-### Deploy Manual com Docker Compose
+### Manual Deploy with Docker Compose
 
 ```bash
-# Build e inicialização dos containers de produção
+# Build and start production containers
 docker compose -f docker-compose.prod.yaml up -d --build
 
-# Verificar status dos containers
+# Check container status
 docker compose -f docker-compose.prod.yaml ps
 
-# Ver logs em tempo real
+# View logs in real time
 docker compose -f docker-compose.prod.yaml logs -f
 
-# Parar serviços
+# Stop services
 docker compose -f docker-compose.prod.yaml down
 ```
 
-### Inicialização do Banco de Dados
+### Database Initialization
 
-> ** Automático em Produção**: O banco de dados é inicializado automaticamente na primeira execução!
+> **Automatic in Production**: The database is automatically initialized on first run!
 
-O `docker-compose.prod.yaml` monta o arquivo `database-dump.sql` no diretório `/docker-entrypoint-initdb.d/` do PostgreSQL. Isso faz com que o script SQL seja executado **automaticamente** quando o volume do banco é criado pela primeira vez.
+`docker-compose.prod.yaml` mounts the `database-dump.sql` file into PostgreSQL’s `/docker-entrypoint-initdb.d/` directory. This causes the SQL script to run **automatically** when the database volume is created for the first time.
 
 ```yaml
-# Configuração no docker-compose.prod.yaml
+# Configuration in docker-compose.prod.yaml
 volumes:
   - ./server/database/import/database-dump.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
 ```
 
-**Comportamento:**
+**Behavior:**
 
-- **Primeiro deploy**: O banco é criado e populado automaticamente com ~4.800 filmes
-- **Deploys subsequentes**: O volume persiste e os dados são mantidos
-- **Reset do banco**: Use `docker compose -f docker-compose.prod.yaml down -v` para remover o volume e reinicializar
+* **First deploy**: Database is created and populated with ~4,800 movies
+* **Subsequent deploys**: Volume persists and data is preserved
+* **Database reset**: Use `docker compose -f docker-compose.prod.yaml down -v` to remove the volume and reinitialize
 
-**Verificar se o banco foi inicializado:**
+**Verify database initialization:**
 
 ```bash
-# Verificar se as tabelas existem
+# Check if tables exist
 docker exec movies-postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -c "\dt"
 
-# Contar registros
+# Count records
 docker exec movies-postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -c "SELECT COUNT(*) FROM movies;"
 ```
 
-### Variáveis de Ambiente para Produção
+### Production Environment Variables
 
-Crie um arquivo `.env` com as seguintes variáveis:
+Create a `.env` file with the following variables:
 
 ```env
-# === OBRIGATÓRIAS ===
+# === REQUIRED ===
 POSTGRES_USER=movies_prod
-POSTGRES_PASSWORD=<senha-forte-aqui>
+POSTGRES_PASSWORD=<strong-password-here>
 POSTGRES_DB=movies_production
-JWT_SECRET=<secret-jwt-forte-de-256-bits>
+JWT_SECRET=<strong-256-bit-jwt-secret>
 
-# === OPCIONAIS ===
-# Registry Docker (para CI/CD)
-DOCKER_REGISTRY=ghcr.io/seu-usuario
+# === OPTIONAL ===
+# Docker registry (for CI/CD)
+DOCKER_REGISTRY=ghcr.io/your-user
 
-# Versão da imagem (SHA do commit ou tag semântica)
+# Image version (commit SHA or semantic tag)
 VERSION=latest
 
-# Porta da aplicação (padrão: 8080)
+# Application port (default: 8080)
 APP_PORT=8080
 ```
 
-### Verificar Saúde dos Containers
+### Container Health Check
 
 ```bash
-# Verificar health check da aplicação
+# Check application health
 curl http://localhost:8080/health
 
-# Resposta esperada:
+# Expected response:
 # {"status":"healthy"}
 
-# Verificar health de todos os containers
+# Check all containers health
 docker compose -f docker-compose.prod.yaml ps
 ```
 
 ---
 
-## CI/CD com GitHub Actions
+## CI/CD with GitHub Actions
 
-O projeto inclui um pipeline completo de CI/CD configurado em `.github/workflows/ci-cd.yaml`.
+The project includes a complete CI/CD pipeline configured in `.github/workflows/ci-cd.yaml`.
 
 ### Pipeline Overview
 
@@ -323,40 +324,40 @@ O projeto inclui um pipeline completo de CI/CD configurado em `.github/workflows
 └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
 ```
 
-### Funcionalidades do Pipeline
+### Pipeline Features
 
-| Etapa             | Descrição                                               |
+| Stage             | Description                                             |
 | ----------------- | ------------------------------------------------------- |
-| **Test Backend**  | Testes Go, linting, verificação de formatação           |
-| **Test Frontend** | Build de verificação do Vite                            |
-| **Build & Push**  | Build multi-stage e push para GitHub Container Registry |
-| **Security Scan** | Scan de vulnerabilidades com Trivy                      |
-| **Deploy**        | Deploy automático (configurável)                        |
+| **Test Backend**  | Go tests, linting, formatting checks                    |
+| **Test Frontend** | Vite verification build                                 |
+| **Build & Push**  | Multi-stage build and push to GitHub Container Registry |
+| **Security Scan** | Vulnerability scanning with Trivy                       |
+| **Deploy**        | Automatic deploy (configurable)                         |
 
-### Triggers do Pipeline
+### Pipeline Triggers
 
-- **Push para `main`**: Executa pipeline completo com deploy
-- **Pull Request**: Executa apenas testes (sem deploy)
-- **Manual**: Permite execução via GitHub UI
+* **Push to `main`**: Runs full pipeline with deploy
+* **Pull Request**: Runs tests only (no deploy)
+* **Manual**: Can be triggered via GitHub UI
 
-### Configurar GitHub Secrets
+### GitHub Secrets Configuration
 
-Para o pipeline funcionar, configure os seguintes secrets no GitHub:
+To enable the pipeline, configure the following secrets:
 
-| Secret           | Descrição                                 |
-| ---------------- | ----------------------------------------- |
-| `GITHUB_TOKEN`   | Automático (não precisa configurar)       |
-| `SERVER_HOST`    | IP/hostname do servidor (para deploy SSH) |
-| `SERVER_USER`    | Usuário SSH do servidor                   |
-| `SERVER_SSH_KEY` | Chave SSH privada para deploy             |
+| Secret           | Description                         |
+| ---------------- | ----------------------------------- |
+| `GITHUB_TOKEN`   | Automatic (no setup required)       |
+| `SERVER_HOST`    | Server IP/hostname (for SSH deploy) |
+| `SERVER_USER`    | SSH user                            |
+| `SERVER_SSH_KEY` | Private SSH key for deploy          |
 
-### Deploy Automático
+### Automatic Deploy
 
-O pipeline está configurado com múltiplas opções de deploy:
+The pipeline supports multiple deployment options:
 
-#### Opção 1: Deploy via SSH para VPS/VM
+#### Option 1: SSH Deploy to VPS/VM
 
-Descomente a seção no workflow e configure os secrets:
+Uncomment the section in the workflow and configure secrets:
 
 ```yaml
 - name: 🚀 Deploy to server
@@ -371,168 +372,164 @@ Descomente a seção no workflow e configure os secrets:
       docker compose -f docker-compose.prod.yaml up -d
 ```
 
-#### Opção 2: Deploy para Plataformas PaaS
+#### Option 2: Deploy to PaaS Platforms
 
-O pipeline pode ser adaptado para:
+The pipeline can be adapted for:
 
-- **Fly.io**: `flyctl deploy`
-- **Railway**: API de deploy
-- **Render**: Webhook de deploy
-- **DigitalOcean App Platform**: API de deploy
+* **Fly.io**: `flyctl deploy`
+* **Railway**: Deploy API
+* **Render**: Deploy webhook
+* **DigitalOcean App Platform**: Deploy API
 
-### Executar Pipeline Manualmente
+### Run Pipeline Manually
 
-1. Vá para **Actions** no repositório GitHub
-2. Selecione **CI/CD Pipeline**
-3. Clique em **Run workflow**
-4. Escolha o ambiente de deploy
+1. Go to **Actions** in the GitHub repository
+2. Select **CI/CD Pipeline**
+3. Click **Run workflow**
+4. Choose the deploy environment
 
 ---
 
-## Scripts NPM
+## NPM Scripts
 
-Na pasta `web/`:
+In the `web/` folder:
 
-| Script            | Descrição                                  |
-| ----------------- | ------------------------------------------ |
-| `npm run dev`     | Build em watch mode para desenvolvimento   |
-| `npm run build`   | Build de produção (otimizado e minificado) |
-| `npm run preview` | Preview do build de produção localmente    |
+| Script            | Description                               |
+| ----------------- | ----------------------------------------- |
+| `npm run dev`     | Watch-mode build for development          |
+| `npm run build`   | Production build (optimized and minified) |
+| `npm run preview` | Local preview of production build         |
 
 ## API Endpoints
 
 ### Health Check
 
-- `GET /health` - Verifica saúde da aplicação e conexão com banco
+* `GET /health` – Checks application health and database connection
 
-### Autenticação
+### Authentication
 
-- `POST /api/account/register/` - Registrar novo usuário
-- `POST /api/account/authenticate/` - Autenticar usuário (login)
+* `POST /api/account/register/` – Register new user
+* `POST /api/account/authenticate/` – Authenticate user (login)
 
-### Filmes
+### Movies
 
-- `GET /api/movies/top` - Listar top 10 filmes mais populares
-- `GET /api/movies/random` - Listar filmes aleatórios
-- `GET /api/movies/search?q={query}&order={order}&genre={genre}` - Buscar filmes
-- `GET /api/movies/{id}` - Obter detalhes de um filme
-- `GET /api/genres` - Listar todos os gêneros
+* `GET /api/movies/top` – List top 10 most popular movies
+* `GET /api/movies/random` – List random movies
+* `GET /api/movies/search?q={query}&order={order}&genre={genre}` – Search movies
+* `GET /api/movies/{id}` – Get movie details
+* `GET /api/genres` – List all genres
 
-### Coleções (Requer autenticação)
+### Collections (Authentication required)
 
-- `GET /api/account/favorites/` - Listar filmes favoritos
-- `GET /api/account/watchlist/` - Listar watchlist
-- `POST /api/account/save-to-collection/` - Adicionar filme à coleção
+* `GET /api/account/favorites/` – List favorite movies
+* `GET /api/account/watchlist/` – List watchlist
+* `POST /api/account/save-to-collection/` – Add movie to collection
 
-**Autenticação**: Endpoints protegidos requerem header `Authorization: Bearer {token}`
+**Authentication**: Protected endpoints require header `Authorization: Bearer {token}`
 
-## Testes
+## Tests
 
-_Seção para testes quando implementados_
+*Section reserved for future test implementation*
 
-## Documentação Adicional
+## Additional Documentation
 
-- [Arquitetura do Projeto](docs/PROJECT_ARCHITECTURE.MD) - Detalhes sobre Clean Architecture e DDD
-- [Diagrama de Entidade-Relacionamento](docs/ENTITY_RELATION_DIAGRAM.MD) - Estrutura do banco de dados
-- [Guia de Performance Frontend](docs/FRONTEND_PERFORMANCE_GUIDE.md) - Otimizações e boas práticas
+* [Project Architecture](docs/PROJECT_ARCHITECTURE.MD) – Clean Architecture and DDD details
+* [Entity-Relationship Diagram](docs/ENTITY_RELATION_DIAGRAM.MD) – Database structure
+* [Frontend Performance Guide](docs/FRONTEND_PERFORMANCE_GUIDE.md) – Optimizations and best practices
 
-## Comandos Úteis
+## Useful Commands
 
-### Desenvolvimento
+### Development
 
 ```bash
-# Subir ambiente de desenvolvimento
+# Start development environment
 docker compose up -d --build
 
-# Ver logs em tempo real
+# View logs in real time
 docker compose logs -f app
 
-# Executar comando dentro do container
+# Run command inside container
 docker exec -it movies-app-1 sh
 
-# Rebuild apenas o backend
+# Rebuild backend only
 docker compose up -d --build app
 ```
 
-### Produção
+### Production
 
 ```bash
-# Build de produção
+# Production build
 docker compose -f docker-compose.prod.yaml build
 
-# Deploy com nova versão
+# Deploy new version
 VERSION=v1.0.0 docker compose -f docker-compose.prod.yaml up -d
 
-# Verificar recursos dos containers
+# Check container resource usage
 docker stats
 
-# Backup do banco de dados
+# Database backup
 docker exec movies-postgres pg_dump -U $POSTGRES_USER $POSTGRES_DB > backup.sql
 ```
 
-### Manutenção
+### Maintenance
 
 ```bash
-# Limpar imagens não utilizadas
+# Clean unused images
 docker image prune -a
 
-# Limpar volumes órfãos
+# Clean orphan volumes
 docker volume prune
 
-# Ver uso de disco
+# Check disk usage
 docker system df
 
-# Logs do sistema
+# System logs
 docker compose -f docker-compose.prod.yaml logs --tail=100
 ```
 
-## Parar a Aplicação
+## Stop the Application
 
-Para parar e remover os containers:
+To stop and remove containers:
 
 ```bash
-# Desenvolvimento
+# Development
 docker compose down
 
-# Produção
+# Production
 docker compose -f docker-compose.prod.yaml down
 ```
 
-Para remover também os volumes (dados do banco):
+To also remove volumes (database data):
 
 ```bash
 docker compose down -v
 ```
 
-## Estrutura de Dados
+## Data Structure
 
-### Principais Entidades
+### Main Entities
 
-- **Movie** - Informações dos filmes (título, sinopse, elenco, etc.)
-- **User** - Usuários do sistema
-- **Actor** - Atores/atrizes
-- **Genre** - Gêneros cinematográficos
-- **UserMovie** - Relação entre usuários e filmes (favoritos/watchlist)
+* **Movie** – Movie information (title, synopsis, cast, etc.)
+* **User** – System users
+* **Actor** – Actors/actresses
+* **Genre** – Movie genres
+* **UserMovie** – Relationship between users and movies (favorites/watchlist)
 
-## Segurança
+## Security
 
-### Aplicação
+### Application
 
-- Senhas são hasheadas com bcrypt
-- Autenticação via JWT (JSON Web Tokens)
-- Validação de dados no backend (Value Objects)
-- Sanitização de inputs
+* Passwords hashed with bcrypt
+* JWT-based authentication (JSON Web Tokens)
+* Backend data validation (Value Objects)
+* Input sanitization
 
-### Containers (Produção)
+### Containers (Production)
 
-- Usuário não-root em todos os containers
-- Filesystem read-only
-- Capabilities Linux removidas
-- Limites de recursos (CPU/memória)
-- Rede isolada entre serviços
-- Health checks ativos
-- Logging com rotação automática
-
-## Licença
-
-MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes.
+* Non-root user in all containers
+* Read-only filesystem
+* Linux capabilities removed
+* Resource limits (CPU/memory)
+* Isolated service network
+* Active health checks
+* Logging with automatic rotation
