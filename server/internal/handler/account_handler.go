@@ -9,6 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/jgamaraalv/movies.git/internal/domain/repository"
 	accountuc "github.com/jgamaraalv/movies.git/internal/usecase/account"
+	movieuc "github.com/jgamaraalv/movies.git/internal/usecase/movie"
 	"github.com/jgamaraalv/movies.git/pkg/logger"
 	"github.com/jgamaraalv/movies.git/pkg/token"
 )
@@ -36,16 +37,17 @@ type AuthResponse struct {
 }
 
 type AccountHandler struct {
-	registerUC         *accountuc.RegisterUseCase
-	authenticateUC     *accountuc.AuthenticateUseCase
-	getFavoritesUC     *accountuc.GetFavoritesUseCase
-	getWatchlistUC     *accountuc.GetWatchlistUseCase
-	saveToCollectionUC *accountuc.SaveToCollectionUseCase
-	logger             *logger.Logger
+	registerUC                   *accountuc.RegisterUseCase
+	authenticateUC               *accountuc.AuthenticateUseCase
+	getFavoritesUC               *accountuc.GetFavoritesUseCase
+	getWatchlistUC               *accountuc.GetWatchlistUseCase
+	saveToCollectionUC           *accountuc.SaveToCollectionUseCase
+	updateUserRecommendationsUC  *movieuc.UpdateUserRecommendationsUseCase
+	logger                       *logger.Logger
 }
 
-func NewAccountHandler(repo repository.UserRepository, log *logger.Logger) *AccountHandler {
-	return &AccountHandler{
+func NewAccountHandler(repo repository.UserRepository, recRepo repository.RecommendationRepository, log *logger.Logger) *AccountHandler {
+	h := &AccountHandler{
 		registerUC:         accountuc.NewRegisterUseCase(repo, log),
 		authenticateUC:     accountuc.NewAuthenticateUseCase(repo, log),
 		getFavoritesUC:     accountuc.NewGetFavoritesUseCase(repo, log),
@@ -53,6 +55,10 @@ func NewAccountHandler(repo repository.UserRepository, log *logger.Logger) *Acco
 		saveToCollectionUC: accountuc.NewSaveToCollectionUseCase(repo, log),
 		logger:             log,
 	}
+	if recRepo != nil {
+		h.updateUserRecommendationsUC = movieuc.NewUpdateUserRecommendationsUseCase(recRepo, log)
+	}
+	return h
 }
 
 func (h *AccountHandler) writeJSONResponse(w http.ResponseWriter, data interface{}) error {
@@ -163,6 +169,16 @@ func (h *AccountHandler) SaveToCollection(w http.ResponseWriter, r *http.Request
 	output, err := h.saveToCollectionUC.Execute(input)
 	if h.handleError(w, err) {
 		return
+	}
+
+	// Fire-and-forget: recompute user embedding and invalidate recommendations
+	if h.updateUserRecommendationsUC != nil && !output.AlreadyInCollection {
+		go func() {
+			recInput := movieuc.UpdateUserRecommendationsInput{Email: email}
+			if _, err := h.updateUserRecommendationsUC.Execute(recInput); err != nil {
+				h.logger.Error("Failed to update user recommendations in background", err)
+			}
+		}()
 	}
 
 	response := AuthResponse{

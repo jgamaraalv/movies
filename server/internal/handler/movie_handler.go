@@ -11,16 +11,17 @@ import (
 )
 
 type MovieHandler struct {
-	getTopMoviesUC    *movie.GetTopMoviesUseCase
-	getRandomMoviesUC *movie.GetRandomMoviesUseCase
-	searchMoviesUC    *movie.SearchMoviesUseCase
-	getMovieByIDUC    *movie.GetMovieByIDUseCase
-	getGenresUC       *movie.GetGenresUseCase
-	logger            *logger.Logger
+	getTopMoviesUC       *movie.GetTopMoviesUseCase
+	getRandomMoviesUC    *movie.GetRandomMoviesUseCase
+	searchMoviesUC       *movie.SearchMoviesUseCase
+	getMovieByIDUC       *movie.GetMovieByIDUseCase
+	getGenresUC          *movie.GetGenresUseCase
+	getRecommendationsUC *movie.GetRecommendationsUseCase
+	logger               *logger.Logger
 }
 
-func NewMovieHandler(repo repository.MovieRepository, log *logger.Logger) *MovieHandler {
-	return &MovieHandler{
+func NewMovieHandler(repo repository.MovieRepository, recRepo repository.RecommendationRepository, log *logger.Logger) *MovieHandler {
+	h := &MovieHandler{
 		getTopMoviesUC:    movie.NewGetTopMoviesUseCase(repo, log),
 		getRandomMoviesUC: movie.NewGetRandomMoviesUseCase(repo, log),
 		searchMoviesUC:    movie.NewSearchMoviesUseCase(repo, log),
@@ -28,6 +29,10 @@ func NewMovieHandler(repo repository.MovieRepository, log *logger.Logger) *Movie
 		getGenresUC:       movie.NewGetGenresUseCase(repo, log),
 		logger:            log,
 	}
+	if recRepo != nil {
+		h.getRecommendationsUC = movie.NewGetRecommendationsUseCase(recRepo, log)
+	}
+	return h
 }
 
 func (h *MovieHandler) writeJSONResponse(w http.ResponseWriter, data interface{}) error {
@@ -128,4 +133,25 @@ func (h *MovieHandler) GetGenres(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.writeJSONResponse(w, output.Genres)
+}
+
+func (h *MovieHandler) GetRecommendations(w http.ResponseWriter, r *http.Request) {
+	if h.getRecommendationsUC == nil {
+		h.writeJSONResponse(w, []interface{}{})
+		return
+	}
+
+	email, ok := r.Context().Value("email").(string)
+	if !ok {
+		h.writeJSONResponse(w, []interface{}{})
+		return
+	}
+
+	input := movie.GetRecommendationsInput{Email: email}
+	output, err := h.getRecommendationsUC.Execute(input)
+	if err != nil {
+		h.writeJSONResponse(w, []interface{}{})
+		return
+	}
+	h.writeJSONResponse(w, output.Movies)
 }

@@ -1,4 +1,5 @@
 import API from "../services/API.js";
+import Store from "../services/Store.js";
 import MovieItemComponent from "./MovieItem.js";
 
 export default class HomePage extends HTMLElement {
@@ -6,16 +7,28 @@ export default class HomePage extends HTMLElement {
     super();
     this._ulTop10 = null;
     this._ulRandom = null;
+    this._recommendedSection = null;
+    this._ulRecommended = null;
   }
 
   async render() {
-    const [topMovies, randomMovies] = await Promise.all([
-      API.getTopMovies(),
-      API.getRandomMovies(),
-    ]);
+    const promises = [API.getTopMovies(), API.getRandomMovies()];
+
+    if (Store.loggedIn) {
+      promises.push(API.getRecommendations());
+    }
+
+    const results = await Promise.all(promises);
+    const [topMovies, randomMovies] = results;
+    const recommendations = results[2] || null;
 
     this._renderMoviesInList(topMovies, this._ulTop10);
     this._renderMoviesInList(randomMovies, this._ulRandom);
+
+    if (recommendations && recommendations.length > 0) {
+      this._renderMoviesInList(recommendations, this._ulRecommended);
+      this._recommendedSection.style.display = "";
+    }
   }
 
   _renderMoviesInList(movies, ul) {
@@ -39,6 +52,8 @@ export default class HomePage extends HTMLElement {
 
     this._ulTop10 = this.querySelector("#top-10 ul");
     this._ulRandom = this.querySelector("#random ul");
+    this._recommendedSection = this.querySelector("#recommended");
+    this._ulRecommended = this.querySelector("#recommended ul");
 
     this.render();
   }

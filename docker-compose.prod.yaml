@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   postgres:
-    image: postgres:13-alpine
+    image: pgvector/pgvector:pg13
     container_name: movies-postgres
     restart: always
     environment:
@@ -12,6 +12,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./server/database/import/database-dump.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./server/database/migrations:/migrations:ro
     security_opt:
       - no-new-privileges:true
     healthcheck:
@@ -108,6 +109,20 @@ services:
         max-size: "10m"
         max-file: "5"
         labels: "service,environment"
+
+  recommender:
+    build:
+      context: ./recommender
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal_network
+    profiles:
+      - training
 
 networks:
   internal_network:

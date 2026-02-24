@@ -59,9 +59,16 @@ func main() {
 		log.Fatalf("Failed to initialize account repository: %v", err)
 	}
 
+	// Initialize recommendation repository (graceful: nil if pgvector not available)
+	recRepo, err := postgres.NewRecommendationRepository(db, logInstance)
+	if err != nil {
+		log.Printf("Warning: Failed to initialize recommendation repository: %v. Recommendations will be disabled.", err)
+		recRepo = nil
+	}
+
 	// Initialize handlers
-	movieHandler := handler.NewMovieHandler(movieRepo, logInstance)
-	accountHandler := handler.NewAccountHandler(accountRepo, logInstance)
+	movieHandler := handler.NewMovieHandler(movieRepo, recRepo, logInstance)
+	accountHandler := handler.NewAccountHandler(accountRepo, recRepo, logInstance)
 
 	// Initialize SSR handler
 	ssrHandler, err := handler.NewSSRHandler(movieHandler, logInstance)
@@ -88,6 +95,8 @@ func main() {
 	http.HandleFunc("/api/movies/top", movieHandler.GetTopMovies)
 	http.HandleFunc("/api/movies/random", movieHandler.GetRandomMovies)
 	http.HandleFunc("/api/movies/search", movieHandler.SearchMovies)
+	http.Handle("/api/movies/recommendations",
+		accountHandler.AuthMiddleware(http.HandlerFunc(movieHandler.GetRecommendations)))
 	http.HandleFunc("/api/movies/", movieHandler.GetMovie)
 	http.HandleFunc("/api/genres", movieHandler.GetGenres)
 

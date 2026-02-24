@@ -230,6 +230,10 @@ section.vertical-scroll {
   padding-left: 0;
 }
 
+#recommended h2 {
+  color: var(--accent);
+}
+
 .vertical-scroll ul {
   display: flex;
   gap: 10px;

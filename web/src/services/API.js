@@ -15,6 +15,13 @@ export const API = {
   getGenres: async () => {
     return await API.fetch("genres");
   },
+  getRecommendations: async () => {
+    try {
+      return await API.fetch("movies/recommendations");
+    } catch (e) {
+      return null;
+    }
+  },
   getFavorites: async () => {
     try {
       return await API.fetch("account/favorites");

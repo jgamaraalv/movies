@@ -24,3 +24,9 @@ var (
 	ErrMovieNotInWatchlist     = errors.New("movie not in watchlist")
 	ErrInvalidCollectionType   = errors.New("invalid collection type")
 )
+
+// Recommendation errors
+var (
+	ErrRecommendationsNotFound = errors.New("recommendations not found")
+	ErrEmbeddingNotFound       = errors.New("embedding not found")
+)

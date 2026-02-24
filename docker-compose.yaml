@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   postgres:
-    image: postgres:13-alpine
+    image: pgvector/pgvector:pg13
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -59,6 +59,20 @@ services:
     command: sh -c "npm install && npm run dev"
     networks:
       - dev_network
+
+  recommender:
+    build:
+      context: ./recommender
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - dev_network
+    profiles:
+      - training
 
 networks:
   dev_network:
