@@ -438,6 +438,94 @@ movie-item .movie-score .star {
   }
 }
 
+/* ================================================
+   MOVIE CARD QUICK ACTIONS (hover buttons)
+   ================================================ */
+.movie-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.movie-card-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.movie-card-btn:hover {
+  transform: scale(1.15);
+}
+
+.movie-card-btn:active {
+  transform: scale(0.88);
+}
+
+.movie-card-btn--fav {
+  color: var(--accent);
+  border-color: rgba(229, 9, 20, 0.35);
+}
+
+.movie-card-btn--fav:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--white);
+  box-shadow: 0 0 14px var(--accent-glow);
+}
+
+.movie-card-btn--watch {
+  color: var(--text-secondary);
+}
+
+.movie-card-btn--watch:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.45);
+  color: var(--white);
+}
+
+.movie-card-btn--done {
+  background: var(--green) !important;
+  border-color: var(--green) !important;
+  color: var(--white) !important;
+  animation: cardBtnPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes cardBtnPop {
+  from { transform: scale(0.6); }
+  to   { transform: scale(1); }
+}
+
+/* Already-saved active states */
+.movie-card-btn--fav--active {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.movie-card-btn--fav--active:hover {
+  background: var(--accent-hover) !important;
+  box-shadow: 0 0 16px var(--accent-glow) !important;
+}
+
+.movie-card-btn--watch--active {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  color: var(--white) !important;
+}
+
 /* Fallback for simple movie-item (without .movie-info) */
 movie-item p {
   font-size: 0.8rem;
@@ -734,13 +822,13 @@ button:active {
 }
 
 /* Default / generic button */
-button:not(#btnFavorites):not(#btnWatchlist):not(.action-btn):not(.cancel-btn):not(.close-btn) {
+button:not(#btnFavorites):not(#btnWatchlist):not(.action-btn):not(.cancel-btn):not(.close-btn):not(.movie-card-btn) {
   background: rgba(255, 255, 255, 0.1);
   color: var(--text-primary);
   border: 1px solid var(--border-subtle);
 }
 
-button:not(#btnFavorites):not(#btnWatchlist):not(.action-btn):not(.cancel-btn):not(.close-btn):hover {
+button:not(#btnFavorites):not(#btnWatchlist):not(.action-btn):not(.cancel-btn):not(.close-btn):not(.movie-card-btn):hover {
   background: rgba(255, 255, 255, 0.18);
   border-color: var(--text-muted);
 }

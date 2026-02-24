@@ -11,7 +11,19 @@ export default class MoviesPage extends HTMLElement {
     const order = urlParams.get("order") ?? "";
     const genre = urlParams.get("genre") ?? "";
 
-    const movies = await API.searchMovies(query, order, genre);
+    const promises = [API.searchMovies(query, order, genre)];
+    if (app.Store.loggedIn) {
+      promises.push(API.getFavorites(), API.getWatchlist());
+    }
+
+    const results = await Promise.all(promises);
+    const movies = results[0];
+
+    const savedIds = { favorites: new Set(), watchlist: new Set() };
+    if (app.Store.loggedIn) {
+      if (Array.isArray(results[1])) results[1].forEach((m) => savedIds.favorites.add(m.id));
+      if (Array.isArray(results[2])) results[2].forEach((m) => savedIds.watchlist.add(m.id));
+    }
 
     while (this._ulMovies.firstChild) {
       this._ulMovies.removeChild(this._ulMovies.firstChild);
@@ -21,7 +33,7 @@ export default class MoviesPage extends HTMLElement {
       const fragment = document.createDocumentFragment();
       for (let i = 0; i < movies.length; i++) {
         const li = document.createElement("li");
-        li.appendChild(new MovieItemComponent(movies[i]));
+        li.appendChild(new MovieItemComponent(movies[i], savedIds));
         fragment.appendChild(li);
       }
       this._ulMovies.appendChild(fragment);
