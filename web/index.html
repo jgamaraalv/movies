@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="color-scheme: dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Moovies</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0"
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0&display=swap"
     />
     <link rel="stylesheet" href="/src/styles.css" />
     <meta name="theme-color" content="#0a0a0a" />
@@ -18,13 +20,14 @@
   </head>
 
   <body>
+    <a href="#main-content" class="skip-link">Skip to content</a>
     <header>
       <h1>
         <a href="/" class="navlink"
           ><img src="/images/logo.svg" height="28" alt="Moovies"
         /></a>
       </h1>
-      <nav>
+      <nav aria-label="Main navigation">
         <ul>
           <li><a href="/" class="navlink">Home</a></li>
           <li><a href="/account/favorites" class="navlink">Favorites</a></li>
@@ -33,13 +36,14 @@
         </ul>
       </nav>
       <div>
-        <form onsubmit="app.search(event)">
-          <input type="search" placeholder="Search titles..." />
+        <form onsubmit="app.search(event)" role="search">
+          <label for="site-search" class="sr-only">Search movies</label>
+          <input type="search" id="site-search" name="q" placeholder="Search titles&#8230;" autocomplete="off" />
         </form>
       </div>
     </header>
 
-    <main></main>
+    <main id="main-content"></main>
 
     <dialog id="alert-modal">
       <h3>Error</h3>
@@ -91,7 +95,7 @@
         <h2><animated-loading elements="2"></animated-loading></h2>
         <h3></h3>
         <header>
-          <img src="" alt="Poster" />
+          <img src="" alt="" width="220" height="330" />
           <youtube-embed id="trailer"></youtube-embed>
           <section id="actions" data-id="">
             <dl id="metadata"></dl>
@@ -143,11 +147,13 @@
       <section>
         <form onsubmit="app.register(event)">
           <h2>Create Account</h2>
+          <div class="form-error" id="register-error" role="alert" aria-live="polite"></div>
           <label for="register-name">Name</label>
           <input
             type="text"
             id="register-name"
-            placeholder="Your name"
+            name="name"
+            placeholder="Your name&#8230;"
             required
             autocomplete="name"
           />
@@ -155,15 +161,18 @@
           <input
             type="email"
             id="register-email"
+            name="email"
             placeholder="you@example.com"
             required
             autocomplete="email"
+            spellcheck="false"
           />
           <label for="register-password">Password</label>
           <input
             type="password"
             id="register-password"
-            placeholder="6+ characters"
+            name="password"
+            placeholder="At least 6 characters&#8230;"
             required
             autocomplete="new-password"
           />
@@ -171,11 +180,12 @@
           <input
             type="password"
             id="register-password-confirm"
-            placeholder="Re-enter password"
+            name="password-confirm"
+            placeholder="Re-enter password&#8230;"
             required
             autocomplete="new-password"
           />
-          <button>Create Account</button>
+          <button type="submit">Create Account</button>
           <p>
             Already have an account?
             <a href="/account/login" class="navlink">Sign in</a>
@@ -188,23 +198,27 @@
       <section>
         <form onsubmit="app.login(event)">
           <h2>Sign In</h2>
+          <div class="form-error" id="login-error" role="alert" aria-live="polite"></div>
           <label for="login-email">Email</label>
           <input
             type="email"
             id="login-email"
+            name="email"
             placeholder="you@example.com"
             required
             autocomplete="email"
+            spellcheck="false"
           />
           <label for="login-password">Password</label>
           <input
             type="password"
             id="login-password"
-            placeholder="Your password"
+            name="password"
+            placeholder="Your password&#8230;"
             required
             autocomplete="current-password"
           />
-          <button>Sign In</button>
+          <button type="submit">Sign In</button>
           <p>
             New here?
             <a href="/account/register" class="navlink">Create an account</a>
@@ -216,14 +230,14 @@
     <template id="template-account">
       <section id="account">
         <h2>My Account</h2>
-        <button onclick="app.Router.go('/account/favorites')">
+        <a href="/account/favorites" class="navlink account-link">
           <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px">favorite</span>
           My Favorites
-        </button>
-        <button onclick="app.Router.go('/account/watchlist')">
+        </a>
+        <a href="/account/watchlist" class="navlink account-link">
           <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px">bookmark</span>
           My Watchlist
-        </button>
+        </a>
         <button onclick="app.logout()" style="margin-top:1rem">
           Sign Out
         </button>

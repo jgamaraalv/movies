@@ -2,7 +2,7 @@
    MOOVIES — Netflix-inspired Cinematic UI
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&display=swap');
+/* Fonts loaded via <link rel="preconnect"> + <link rel="stylesheet"> in HTML */
 
 :root {
   --bg-deep: #0a0a0a;
@@ -49,6 +49,49 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- Skip link ---- */
+.skip-link {
+  position: fixed;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  padding: 10px 24px;
+  background: var(--accent);
+  color: var(--white);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.skip-link:focus {
+  top: 0.75rem;
+}
+
+/* ---- Visually hidden (for accessible labels) ---- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- Global focus-visible ---- */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
 }
 
 body {
@@ -132,9 +175,10 @@ nav a {
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  padding: 4px 0;
+  padding: 12px 4px;
   position: relative;
   transition: color var(--transition-fast);
+  touch-action: manipulation;
 }
 
 nav a::after {
@@ -178,7 +222,6 @@ input[type="search"] {
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: 0.875rem;
-  outline: none;
   transition: border-color var(--transition-fast), width var(--transition-slow);
 }
 
@@ -209,6 +252,7 @@ h2 {
   letter-spacing: 0.06em;
   color: var(--white);
   margin-bottom: 1rem;
+  text-wrap: balance;
 }
 
 h3 {
@@ -280,7 +324,8 @@ movie-item {
   cursor: pointer;
 }
 
-movie-item:hover {
+movie-item:hover,
+movie-item:focus-within {
   transform: scale(1.08);
   box-shadow: var(--shadow-hover);
   z-index: 10;
@@ -289,6 +334,10 @@ movie-item:hover {
 movie-item a {
   display: block;
   color: var(--text-primary);
+}
+
+movie-item a:focus-visible {
+  outline: none;
 }
 
 movie-item article {
@@ -306,7 +355,8 @@ movie-item img {
   transition: filter var(--transition-base);
 }
 
-movie-item:hover img {
+movie-item:hover img,
+movie-item:focus-within img {
   filter: brightness(0.65);
 }
 
@@ -323,20 +373,23 @@ movie-item .movie-info {
   transition: opacity var(--transition-base), transform var(--transition-base);
 }
 
-movie-item:hover .movie-info {
+movie-item:hover .movie-info,
+movie-item:focus-within .movie-info {
   opacity: 1;
   transform: translateY(0);
 }
 
 movie-item .movie-title {
+  display: block;
   font-size: 0.8rem;
   font-weight: 600;
   line-height: 1.3;
   color: var(--white);
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
 
 movie-item .movie-year {
+  display: block;
   font-size: 0.7rem;
   color: var(--text-secondary);
 }
@@ -360,13 +413,29 @@ movie-item .movie-score {
   transition: opacity var(--transition-base), transform var(--transition-base);
 }
 
-movie-item:hover .movie-score {
+movie-item:hover .movie-score,
+movie-item:focus-within .movie-score {
   opacity: 1;
   transform: translateY(0);
 }
 
 movie-item .movie-score .star {
   font-size: 0.65rem;
+}
+
+/* Always show movie info on touch devices */
+@media (hover: none) {
+  movie-item .movie-info {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  movie-item .movie-score {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  movie-item:hover {
+    transform: none;
+  }
 }
 
 /* Fallback for simple movie-item (without .movie-info) */
@@ -415,7 +484,6 @@ select {
 select:hover,
 select:focus {
   border-color: var(--text-muted);
-  outline: none;
 }
 
 #movies-result {
@@ -626,8 +694,14 @@ button {
   font-weight: 600;
   letter-spacing: 0.02em;
   cursor: pointer;
+  touch-action: manipulation;
   transition: background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
   margin: 0;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 button:active {
@@ -711,7 +785,6 @@ input[type="email"] {
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: 0.95rem;
-  outline: none;
   transition: border-color var(--transition-fast);
 }
 
@@ -719,6 +792,19 @@ input[type="text"]:focus,
 input[type="password"]:focus,
 input[type="email"]:focus {
   border-color: var(--white);
+}
+
+/* Inline form errors */
+.form-error {
+  color: var(--accent);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin-bottom: 1rem;
+  min-height: 0;
+}
+
+.form-error:empty {
+  display: none;
 }
 
 form button {
@@ -1021,4 +1107,71 @@ dd {
 
 section {
   margin-bottom: 2rem;
+}
+
+/* ================================================
+   ACCOUNT PAGE LINKS (styled as buttons)
+   ================================================ */
+.account-link {
+  display: block;
+  width: 100%;
+  margin: 0.5rem 0;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+  text-align: center;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.account-link:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: var(--text-muted);
+  color: var(--white);
+}
+
+/* ================================================
+   LOADING SPINNER (for form buttons)
+   ================================================ */
+.btn-loading {
+  position: relative;
+  color: transparent !important;
+}
+
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--white);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ================================================
+   REDUCED MOTION
+   ================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

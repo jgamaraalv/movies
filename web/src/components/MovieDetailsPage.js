@@ -17,7 +17,9 @@ export default class MovieDetailsPage extends HTMLElement {
 
     content.querySelector("h2").textContent = this._movie.title;
     content.querySelector("h3").textContent = this._movie.tagline;
-    content.querySelector("img").src = this._movie.poster_url;
+    const posterImg = content.querySelector("img");
+    posterImg.src = this._movie.poster_url;
+    posterImg.alt = this._movie.title + " poster";
     content.querySelector("#trailer").dataset.url = this._movie.trailer_url;
     content.querySelector("#overview").textContent = this._movie.overview;
 
@@ -72,7 +74,10 @@ export default class MovieDetailsPage extends HTMLElement {
 
       const img = document.createElement("img");
       img.src = actor.image_url ?? "/images/generic_actor.jpg";
-      img.alt = `Picture of ${actor.last_name}`;
+      img.alt = `${actor.first_name} ${actor.last_name}`;
+      img.loading = "lazy";
+      img.width = 56;
+      img.height = 80;
 
       const p = document.createElement("p");
       p.textContent = `${actor.first_name} ${actor.last_name}`;

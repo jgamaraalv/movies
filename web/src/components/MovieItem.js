@@ -23,8 +23,10 @@ export default class MovieItemComponent extends HTMLElement {
 
     const img = document.createElement("img");
     img.src = this._movie.poster_url;
-    img.alt = this._movie.title + " Poster";
+    img.alt = this._movie.title + " poster";
     img.loading = "lazy";
+    img.width = 185;
+    img.height = 278;
 
     // Score badge
     if (this._movie.score) {

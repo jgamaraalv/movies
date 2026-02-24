@@ -13,7 +13,7 @@ window.app = {
     goToHome = true
   ) => {
     document.querySelector("#alert-modal").showModal();
-    document.querySelector("#alert-modal p").textContents = message;
+    document.querySelector("#alert-modal p").textContent = message;
     if (goToHome) app.Router.go("/");
     return;
   },
@@ -72,6 +72,9 @@ window.app = {
   },
   register: async (event) => {
     event.preventDefault();
+    const form = event.target;
+    const btn = form.querySelector("button[type=submit]");
+    const errorEl = document.getElementById("register-error");
     let errors = [];
     const name = document.getElementById("register-name").value;
     const email = document.getElementById("register-email").value;
@@ -80,40 +83,61 @@ window.app = {
       "register-password-confirm"
     ).value;
 
+    errorEl.textContent = "";
+
     if (name.length < 4) errors.push("Enter your complete name");
-    if (email.length < 8) errors.push("Enter your complete email");
-    if (password.length < 6) errors.push("Enter a password with 6 characters");
+    if (email.length < 8) errors.push("Enter a valid email address");
+    if (password.length < 6) errors.push("Password must be at least 6 characters");
     if (password != passwordConfirm) errors.push("Passwords don't match");
     if (errors.length == 0) {
-      const response = await API.register(name, email, password);
-      if (response.success) {
-        app.Store.jwt = response.jwt;
-        app.Router.go("/account/");
-      } else {
-        app.showError(response.message, false);
+      btn.disabled = true;
+      btn.classList.add("btn-loading");
+      try {
+        const response = await API.register(name, email, password);
+        if (response.success) {
+          app.Store.jwt = response.jwt;
+          app.Router.go("/account/");
+        } else {
+          errorEl.textContent = response.message;
+        }
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove("btn-loading");
       }
     } else {
-      app.showError(errors.join(". "), false);
+      errorEl.textContent = errors.join(". ");
     }
   },
   login: async (event) => {
     event.preventDefault();
+    const form = event.target;
+    const btn = form.querySelector("button[type=submit]");
+    const errorEl = document.getElementById("login-error");
     let errors = [];
     const email = document.getElementById("login-email").value;
     const password = document.getElementById("login-password").value;
 
-    if (email.length < 8) errors.push("Enter your complete email");
-    if (password.length < 6) errors.push("Enter a password with 6 characters");
+    errorEl.textContent = "";
+
+    if (email.length < 8) errors.push("Enter a valid email address");
+    if (password.length < 6) errors.push("Password must be at least 6 characters");
     if (errors.length == 0) {
-      const response = await API.authenticate(email, password);
-      if (response.success) {
-        app.Store.jwt = response.jwt;
-        app.Router.go("/account/");
-      } else {
-        app.showError(response.message, false);
+      btn.disabled = true;
+      btn.classList.add("btn-loading");
+      try {
+        const response = await API.authenticate(email, password);
+        if (response.success) {
+          app.Store.jwt = response.jwt;
+          app.Router.go("/account/");
+        } else {
+          errorEl.textContent = response.message;
+        }
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove("btn-loading");
       }
     } else {
-      app.showError(errors.join(". "), false);
+      errorEl.textContent = errors.join(". ");
     }
   },
   logout: () => {

@@ -72,7 +72,7 @@ export default class MoviesPage extends HTMLElement {
     const urlParams = new URLSearchParams(window.location.search);
     const query = urlParams.get("q");
     if (query) {
-      this.querySelector("h2").textContent = "'" + query + "' movies";
+      this.querySelector("h2").textContent = "\u201C" + query + "\u201D movies";
       this.render(query);
     } else {
       app.showError();
