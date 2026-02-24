@@ -23,10 +23,21 @@ A full-stack web application for listing and managing movies, built with **Go** 
   * Create a watchlist
   * View personal collections
 
+* **AI-Powered Recommendation System**
+
+  * Neural Collaborative Filtering model (NCF/NeuMF) trained with TensorFlow
+  * 128-dimensional embeddings stored via pgvector in PostgreSQL
+  * Real-time hybrid recommendation algorithm combining:
+    * **Genre affinity** (35%) — prioritizes genres the user likes most
+    * **Embedding similarity** (25%) — latent features from the NCF model
+    * **Collaborative filtering** (20%) — movies liked by similar users
+    * **Movie quality** (12% score + 8% popularity) — tiebreaker
+  * Recommendations automatically recomputed on each user interaction
+  * Cold-start support for new users via genre-based fallback
+
 ## Architecture
 
 The project follows **Clean Architecture** and **DDD** principles, organizing the code into well-defined layers:
-
 * **Domain Layer**: Entities, Value Objects, and repository interfaces
 * **Application Layer**: Use cases that orchestrate business logic
 * **Interface Layer**: HTTP handlers that process requests
@@ -56,6 +67,12 @@ movies/
 │   ├── index.html
 │   └── package.json
 │
+├── recommender/         # ML recommendation system
+│   ├── models/          # NCF/NeuMF model definition
+│   ├── data/            # Training data and embeddings
+│   ├── train.py         # Training pipeline
+│   └── generate_embeddings.py  # Embedding extraction
+│
 ├── .github/workflows/   # CI/CD with GitHub Actions
 │   └── ci-cd.yaml       # CI/CD pipeline
 │
@@ -79,6 +96,13 @@ For more details about the architecture, see the [full documentation](docs/PROJE
 * **ES Modules** – Native ES6 modules
 * **Web Components** – Reusable components
 * **Vite 5.4+** – Build tool and optimizations
+
+### Machine Learning
+
+* **TensorFlow / Keras** – NCF model training
+* **Python 3.11+** – Training pipeline and embedding extraction
+* **pgvector** – PostgreSQL extension for vector similarity search
+* **NumPy / Pandas** – Data processing
 
 ### DevOps
 
@@ -161,6 +185,16 @@ On first run, you must populate the database:
 docker exec movies-app-1 go run ./database/import/install.go
 ```
 
+#### Train the recommendation model (optional)
+
+To retrain the NCF model and regenerate embeddings:
+
+```bash
+docker compose --profile training up recommender
+```
+
+This trains the NeuMF model on user interaction data and exports 128-dim embeddings into PostgreSQL via pgvector. The Go backend uses these embeddings at runtime as part of its hybrid scoring algorithm.
+
 #### Development workflow
 
 * **Backend**: Changes to `.go` files automatically restart the server (Air)
@@ -169,7 +203,6 @@ docker exec movies-app-1 go run ./database/import/install.go
 ### Option 2: Hybrid Development
 
 For local frontend development (without Docker):
-
 #### 1. Install frontend dependencies
 
 ```bash
@@ -419,11 +452,15 @@ In the `web/` folder:
 * `GET /api/movies/{id}` – Get movie details
 * `GET /api/genres` – List all genres
 
+### Recommendations (Authentication required)
+
+* `POST /api/movies/recommendations` – Get personalized recommendations for the authenticated user
+
 ### Collections (Authentication required)
 
 * `GET /api/account/favorites/` – List favorite movies
 * `GET /api/account/watchlist/` – List watchlist
-* `POST /api/account/save-to-collection/` – Add movie to collection
+* `POST /api/account/save-to-collection/` – Add movie to collection (also triggers recommendation recomputation)
 
 **Authentication**: Protected endpoints require header `Authorization: Bearer {token}`
 
@@ -438,7 +475,6 @@ In the `web/` folder:
 * [Frontend Performance Guide](docs/FRONTEND_PERFORMANCE_GUIDE.md) – Optimizations and best practices
 
 ## Useful Commands
-
 ### Development
 
 ```bash
@@ -514,6 +550,9 @@ docker compose down -v
 * **Actor** – Actors/actresses
 * **Genre** – Movie genres
 * **UserMovie** – Relationship between users and movies (favorites/watchlist)
+* **MovieEmbedding** – 128-dim vector embeddings for movies (pgvector)
+* **UserEmbedding** – Aggregated user taste vectors (pgvector)
+* **UserRecommendation** – Cached personalized recommendations per user
 
 ## Security
 

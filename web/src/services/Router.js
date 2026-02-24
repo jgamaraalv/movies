@@ -1,4 +1,5 @@
 import { routes } from "./Routes.js";
+import Store from "./Store.js";
 
 let _mainElement = null;
 
@@ -8,8 +9,14 @@ const Router = {
 
     // Check if page was server-side rendered
     const ssrDataScript = document.getElementById("ssr-data");
-    if (ssrDataScript && _mainElement && _mainElement.children.length > 0) {
+    if (
+      ssrDataScript &&
+      _mainElement &&
+      _mainElement.children.length > 0 &&
+      !Store.loggedIn
+    ) {
       // Page was SSR'd, hydrate instead of re-rendering
+      // Skip hydration for logged-in users — SPA path fetches personalized content
       try {
         const ssrData = JSON.parse(ssrDataScript.textContent);
         Router.hydrate(ssrData);
@@ -18,7 +25,8 @@ const Router = {
         Router.go(location.pathname + location.search, false);
       }
     } else {
-      // Normal SPA initialization
+      // Normal SPA initialization (also used for logged-in users)
+      if (ssrDataScript) ssrDataScript.remove();
       Router.go(location.pathname + location.search, false);
     }
 

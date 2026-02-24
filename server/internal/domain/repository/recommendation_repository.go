@@ -8,4 +8,5 @@ type RecommendationRepository interface {
 	GetUserIDByEmail(email string) (int, error)
 	InvalidateRecommendations(userID int) error
 	RecomputeUserEmbedding(userID int) error
+	ComputeRecommendations(userID int) error
 }

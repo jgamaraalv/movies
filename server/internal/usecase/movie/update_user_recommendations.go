@@ -34,11 +34,11 @@ func (uc *UpdateUserRecommendationsUseCase) Execute(input UpdateUserRecommendati
 
 	if err := uc.recRepo.RecomputeUserEmbedding(userID); err != nil {
 		uc.logger.Error("Failed to recompute user embedding", err)
-		return &UpdateUserRecommendationsOutput{Success: false}, err
+		// Continue even if embedding fails — genre-based recs still work
 	}
 
-	if err := uc.recRepo.InvalidateRecommendations(userID); err != nil {
-		uc.logger.Error("Failed to invalidate recommendations", err)
+	if err := uc.recRepo.ComputeRecommendations(userID); err != nil {
+		uc.logger.Error("Failed to compute recommendations", err)
 		return &UpdateUserRecommendationsOutput{Success: false}, err
 	}
 
