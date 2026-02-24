@@ -3,18 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Movies</title>
+    <title>Moovies</title>
 
-    <link
-      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;700&display=swap"
-      rel="stylesheet"
-    />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0"
     />
     <link rel="stylesheet" href="/src/styles.css" />
-    <meta name="theme-color" content="#56bce8" />
+    <meta name="theme-color" content="#0a0a0a" />
     <link rel="manifest" href="/app.webmanifest" />
     <link rel="icon" href="/images/icon.png" type="image/png" />
     <script src="/src/app.js" type="module" defer></script>
@@ -25,20 +21,20 @@
     <header>
       <h1>
         <a href="/" class="navlink"
-          ><img src="/images/logo.png" height="35" alt="ReelingIt"
+          ><img src="/images/logo.svg" height="28" alt="Moovies"
         /></a>
       </h1>
       <nav>
         <ul>
-          <li><a href="/" class="navlink">Movies</a></li>
+          <li><a href="/" class="navlink">Home</a></li>
           <li><a href="/account/favorites" class="navlink">Favorites</a></li>
           <li><a href="/account/watchlist" class="navlink">Watchlist</a></li>
-          <li><a href="/account/" class="navlink">My Account</a></li>
+          <li><a href="/account/" class="navlink">Account</a></li>
         </ul>
       </nav>
       <div>
         <form onsubmit="app.search(event)">
-          <input type="search" placeholder="Search movies" />
+          <input type="search" placeholder="Search titles..." />
         </form>
       </div>
     </header>
@@ -54,24 +50,24 @@
     <!--TEMPLATES-->
     <template id="template-home">
       <section class="vertical-scroll" id="top-10">
-        <h2>This Week's Top 10</h2>
+        <h2>Top 10 This Week</h2>
         <ul>
           <animated-loading
-            data-elements="5"
-            data-width="150px"
-            data-height="220px"
+            data-elements="7"
+            data-width="185px"
+            data-height="278px"
           >
           </animated-loading>
         </ul>
       </section>
 
       <section class="vertical-scroll" id="random">
-        <h2>Something to watch today</h2>
+        <h2>Discover Something New</h2>
         <ul>
           <animated-loading
-            data-elements="5"
-            data-width="150px"
-            data-height="220px"
+            data-elements="7"
+            data-width="185px"
+            data-height="278px"
           >
           </animated-loading>
         </ul>
@@ -84,15 +80,22 @@
         <h3></h3>
         <header>
           <img src="" alt="Poster" />
-          <youtube-embed id="trailer">YouTube loading...</youtube-embed>
+          <youtube-embed id="trailer"></youtube-embed>
           <section id="actions" data-id="">
             <dl id="metadata"></dl>
-            <button id="btnFavorites">Add to Favorites</button>
-            <button id="btnWatchlist">Add to Watchlist</button>
+            <button id="btnFavorites">
+              <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px">favorite</span>
+              Add to Favorites
+            </button>
+            <button id="btnWatchlist">
+              <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px">bookmark</span>
+              Add to Watchlist
+            </button>
           </section>
         </header>
         <ul id="genres"></ul>
         <p id="overview"></p>
+        <h2 style="margin-top:2rem">Cast</h2>
         <ul id="cast"></ul>
       </article>
     </template>
@@ -115,9 +118,9 @@
         </div>
         <ul id="movies-result">
           <animated-loading
-            data-elements="5"
-            data-width="150px"
-            data-height="220px"
+            data-elements="8"
+            data-width="185px"
+            data-height="278px"
           >
           </animated-loading>
         </ul>
@@ -126,13 +129,13 @@
 
     <template id="template-register">
       <section>
-        <h2>Register a New Account</h2>
         <form onsubmit="app.register(event)">
+          <h2>Create Account</h2>
           <label for="register-name">Name</label>
           <input
             type="text"
             id="register-name"
-            placeholder="Name"
+            placeholder="Your name"
             required
             autocomplete="name"
           />
@@ -140,7 +143,7 @@
           <input
             type="email"
             id="register-email"
-            placeholder="Email"
+            placeholder="you@example.com"
             required
             autocomplete="email"
           />
@@ -148,7 +151,7 @@
           <input
             type="password"
             id="register-password"
-            placeholder="Password"
+            placeholder="6+ characters"
             required
             autocomplete="new-password"
           />
@@ -156,14 +159,14 @@
           <input
             type="password"
             id="register-password-confirm"
-            placeholder="Confirm Password"
+            placeholder="Re-enter password"
             required
             autocomplete="new-password"
           />
-          <button>Register</button>
+          <button>Create Account</button>
           <p>
-            If you already have an account, please
-            <a href="/account/login">login</a>.
+            Already have an account?
+            <a href="/account/login" class="navlink">Sign in</a>
           </p>
         </form>
       </section>
@@ -171,13 +174,13 @@
 
     <template id="template-login">
       <section>
-        <h2>Login into Your Account</h2>
         <form onsubmit="app.login(event)">
+          <h2>Sign In</h2>
           <label for="login-email">Email</label>
           <input
             type="email"
             id="login-email"
-            placeholder="Email"
+            placeholder="you@example.com"
             required
             autocomplete="email"
           />
@@ -185,14 +188,14 @@
           <input
             type="password"
             id="login-password"
-            placeholder="Password"
+            placeholder="Your password"
             required
             autocomplete="current-password"
           />
-          <button>Log In</button>
+          <button>Sign In</button>
           <p>
-            If you don't have an account, please
-            <a href="/account/register">register</a>.
+            New here?
+            <a href="/account/register" class="navlink">Create an account</a>
           </p>
         </form>
       </section>
@@ -200,13 +203,17 @@
 
     <template id="template-account">
       <section id="account">
-        <h2>You are Logged In</h2>
-        <button onclick="app.logout()">Log out</button>
+        <h2>My Account</h2>
         <button onclick="app.Router.go('/account/favorites')">
-          Your Favorites
+          <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px">favorite</span>
+          My Favorites
         </button>
         <button onclick="app.Router.go('/account/watchlist')">
-          Your Watchlist
+          <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px">bookmark</span>
+          My Watchlist
+        </button>
+        <button onclick="app.logout()" style="margin-top:1rem">
+          Sign Out
         </button>
       </section>
     </template>
@@ -215,9 +222,9 @@
       <section>
         <ul id="movies-result">
           <animated-loading
-            data-elements="5"
-            data-width="150px"
-            data-height="220px"
+            data-elements="8"
+            data-width="185px"
+            data-height="278px"
           >
           </animated-loading>
         </ul>
@@ -225,7 +232,7 @@
     </template>
 
     <footer>
-      <p>© Movies - vequiato.dev</p>
+      <p>Moovies &mdash; Your personal cinema catalog</p>
     </footer>
   </body>
 </html>

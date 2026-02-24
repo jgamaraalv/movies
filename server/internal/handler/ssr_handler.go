@@ -298,7 +298,7 @@ func (h *SSRHandler) renderPage(w http.ResponseWriter, pageType string, data Pag
 
 	// Update title and meta description
 	if data.Title != "" {
-		html = strings.Replace(html, "<title>Movies</title>", "<title>"+template.HTMLEscapeString(data.Title)+"</title>", 1)
+		html = strings.Replace(html, "<title>Moovies</title>", "<title>"+template.HTMLEscapeString(data.Title)+"</title>", 1)
 	}
 
 	if data.Description != "" {
@@ -333,13 +333,13 @@ func (h *SSRHandler) renderMainContent(pageType string, data PageData) string {
 func (h *SSRHandler) renderHomeContent(data PageData) string {
 	var html strings.Builder
 
-	html.WriteString(`<section class="vertical-scroll" id="top-10"><h2>This Week's Top 10</h2><ul>`)
+	html.WriteString(`<section class="vertical-scroll" id="top-10"><h2>Top 10 This Week</h2><ul>`)
 	for _, movie := range data.TopMovies {
 		html.WriteString(h.renderMovieItem(movie))
 	}
 	html.WriteString(`</ul></section>`)
 
-	html.WriteString(`<section class="vertical-scroll" id="random"><h2>Something to watch today</h2><ul>`)
+	html.WriteString(`<section class="vertical-scroll" id="random"><h2>Discover Something New</h2><ul>`)
 	for _, movie := range data.RandomMovies {
 		html.WriteString(h.renderMovieItem(movie))
 	}

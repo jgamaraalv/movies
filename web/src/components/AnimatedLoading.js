@@ -12,8 +12,10 @@ class AnimatedLoading extends HTMLElement {
       wrapper.setAttribute("class", "loading-wave");
       wrapper.style.width = width;
       wrapper.style.height = height;
-      wrapper.style.margin = "10px";
+      wrapper.style.margin = "0 5px";
       wrapper.style.display = "inline-block";
+      wrapper.style.borderRadius = "8px";
+      wrapper.style.flexShrink = "0";
       this.appendChild(wrapper);
     }
   }

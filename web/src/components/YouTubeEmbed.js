@@ -12,7 +12,10 @@ export class YouTubeEmbed extends HTMLElement {
       if (!this._iframe) {
         this._iframe = document.createElement("iframe");
         this._iframe.width = "100%";
-        this._iframe.height = "300";
+        this._iframe.height = "100%";
+        this._iframe.style.minHeight = "280px";
+        this._iframe.style.display = "block";
+        this._iframe.style.border = "none";
         this._iframe.title = "YouTube video player";
         this._iframe.frameBorder = "0";
         this._iframe.allow =

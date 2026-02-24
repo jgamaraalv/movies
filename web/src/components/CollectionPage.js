@@ -27,7 +27,7 @@ export default class CollectionPage extends HTMLElement {
       this._ulMovies.appendChild(fragment);
     } else {
       const emptyMessage = document.createElement("h3");
-      emptyMessage.textContent = "There are no movies";
+      emptyMessage.textContent = "No movies in this collection yet";
       this._ulMovies.appendChild(emptyMessage);
     }
   }
@@ -35,6 +35,13 @@ export default class CollectionPage extends HTMLElement {
   connectedCallback() {
     const template = document.getElementById("template-collection");
     const content = template.content.cloneNode(true);
+
+    // Add collection title
+    const heading = document.createElement("h2");
+    heading.textContent = this.title;
+    heading.className = "collection-title";
+
+    this.appendChild(heading);
     this.appendChild(content);
 
     this._ulMovies = this.querySelector("ul");

@@ -24,12 +24,39 @@ export default class MovieItemComponent extends HTMLElement {
     const img = document.createElement("img");
     img.src = this._movie.poster_url;
     img.alt = this._movie.title + " Poster";
+    img.loading = "lazy";
 
-    const p = document.createElement("p");
-    p.textContent = this._movie.title + " (" + this._movie.release_year + ")";
+    // Score badge
+    if (this._movie.score) {
+      const scoreBadge = document.createElement("span");
+      scoreBadge.className = "movie-score";
+      const star = document.createElement("span");
+      star.className = "star";
+      star.textContent = "\u2605";
+      scoreBadge.appendChild(star);
+      scoreBadge.appendChild(
+        document.createTextNode(" " + Number(this._movie.score).toFixed(1))
+      );
+      article.appendChild(scoreBadge);
+    }
+
+    // Info overlay
+    const info = document.createElement("div");
+    info.className = "movie-info";
+
+    const title = document.createElement("span");
+    title.className = "movie-title";
+    title.textContent = this._movie.title;
+
+    const year = document.createElement("span");
+    year.className = "movie-year";
+    year.textContent = this._movie.release_year;
+
+    info.appendChild(title);
+    info.appendChild(year);
 
     article.appendChild(img);
-    article.appendChild(p);
+    article.appendChild(info);
     a.appendChild(article);
     this.appendChild(a);
   }
