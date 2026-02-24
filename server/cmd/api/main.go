@@ -37,6 +37,10 @@ func main() {
 		log.Printf("No .env file found in any of the expected locations. Using environment variables only.")
 	}
 
+	if os.Getenv("JWT_SECRET") == "" {
+		log.Fatalf("JWT_SECRET environment variable is not set. Set it to a strong, unique random value.")
+	}
+
 	dbConnStr := os.Getenv("DATABASE_URL")
 	if dbConnStr == "" {
 		log.Fatalf("DATABASE_URL not set in environment")
@@ -204,10 +208,22 @@ func main() {
 	const addr = ":8080"
 	logInstance.Info("Server starting on " + addr)
 
-	if err := http.ListenAndServe(addr, nil); err != nil {
+	if err := http.ListenAndServe(addr, securityMiddleware(http.DefaultServeMux)); err != nil {
 		logInstance.Error("Server failed to start", err)
 		log.Fatalf("Server failed: %v", err)
 	}
+}
+
+// securityMiddleware adds security headers and limits request body size.
+func securityMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		w.Header().Set("X-XSS-Protection", "0")
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20) // 1 MB
+		next.ServeHTTP(w, r)
+	})
 }
 
 func initializeLogger() *logger.Logger {

@@ -36,6 +36,12 @@ type AuthResponse struct {
 	JWT     string `json:"jwt,omitempty"`
 }
 
+// contextKey is an unexported type for context keys in this package,
+// preventing collisions with keys from other packages.
+type contextKey string
+
+const emailContextKey contextKey = "email"
+
 type AccountHandler struct {
 	registerUC                   *accountuc.RegisterUseCase
 	authenticateUC               *accountuc.AuthenticateUseCase
@@ -85,8 +91,8 @@ func (h *AccountHandler) handleError(w http.ResponseWriter, err error) bool {
 		default:
 			h.logger.Error("Handler error", err)
 			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(AuthResponse{Success: false, Message: err.Error()})
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(AuthResponse{Success: false, Message: "An unexpected error occurred"})
 			return true
 		}
 	}
@@ -154,7 +160,12 @@ func (h *AccountHandler) SaveToCollection(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	email, ok := r.Context().Value("email").(string)
+	if req.Collection != "favorite" && req.Collection != "watchlist" {
+		http.Error(w, "Invalid collection", http.StatusBadRequest)
+		return
+	}
+
+	email, ok := r.Context().Value(emailContextKey).(string)
 	if !ok {
 		http.Error(w, "Unable to retrieve email", http.StatusInternalServerError)
 		return
@@ -189,7 +200,7 @@ func (h *AccountHandler) SaveToCollection(w http.ResponseWriter, r *http.Request
 }
 
 func (h *AccountHandler) GetFavorites(w http.ResponseWriter, r *http.Request) {
-	email, ok := r.Context().Value("email").(string)
+	email, ok := r.Context().Value(emailContextKey).(string)
 	if !ok {
 		http.Error(w, "Unable to retrieve email", http.StatusInternalServerError)
 		return
@@ -205,7 +216,7 @@ func (h *AccountHandler) GetFavorites(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AccountHandler) GetWatchlist(w http.ResponseWriter, r *http.Request) {
-	email, ok := r.Context().Value("email").(string)
+	email, ok := r.Context().Value(emailContextKey).(string)
 	if !ok {
 		http.Error(w, "Unable to retrieve email", http.StatusInternalServerError)
 		return
@@ -255,7 +266,7 @@ func (h *AccountHandler) AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "email", email)
+		ctx := context.WithValue(r.Context(), emailContextKey, email)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

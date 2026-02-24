@@ -6,11 +6,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const MinPasswordLength = 6
+const MinPasswordLength = 8
 
 var (
 	ErrEmptyPassword    = errors.New("password is required")
-	ErrPasswordTooShort = errors.New("password must be at least 6 characters")
+	ErrPasswordTooShort = errors.New("password must be at least 8 characters")
 	ErrPasswordMismatch = errors.New("invalid password")
 )
 

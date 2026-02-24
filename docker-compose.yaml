@@ -22,6 +22,7 @@ services:
       - dev_network
 
   app:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile

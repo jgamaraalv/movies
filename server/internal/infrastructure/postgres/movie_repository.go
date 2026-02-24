@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"fmt"
 	"strconv"
 
 	"github.com/jgamaraalv/movies.git/internal/domain/repository"
@@ -113,22 +114,23 @@ func (r *MovieRepository) SearchMoviesByName(name string, order string, genre *i
 		orderBy = "release_year DESC"
 	}
 
+	args := []interface{}{"%" + name + "%"}
 	genreFilter := ""
 	if genre != nil {
-		genreFilter = ` AND ((SELECT COUNT(*) FROM movie_genres 
-								WHERE movie_id=movies.id 
-								AND genre_id=` + strconv.Itoa(*genre) + `) = 1) `
+		args = append(args, *genre)
+		genreFilter = fmt.Sprintf(` AND ((SELECT COUNT(*) FROM movie_genres WHERE movie_id=movies.id AND genre_id=$%d) = 1) `, len(args))
 	}
+	args = append(args, defaultLimit)
+	limitParam := fmt.Sprintf("$%d", len(args))
 
 	query := `
-		SELECT id, tmdb_id, title, tagline, release_year, overview, score, 
+		SELECT id, tmdb_id, title, tagline, release_year, overview, score,
 		       popularity, language, poster_url, trailer_url
 		FROM movies
 		WHERE (title ILIKE $1 OR overview ILIKE $1) ` + genreFilter + `
 		ORDER BY ` + orderBy + `
-		LIMIT $2
-	`
-	rows, err := r.db.Query(query, "%"+name+"%", defaultLimit)
+		LIMIT ` + limitParam
+	rows, err := r.db.Query(query, args...)
 	if err != nil {
 		r.logger.Error("Failed to search movies by name", err)
 		return nil, err

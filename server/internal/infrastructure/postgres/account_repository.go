@@ -32,7 +32,7 @@ func (r *AccountRepository) Register(name, email, hashedPassword string) (bool, 
 		return false, err
 	}
 	if exists {
-		r.logger.Error("User already exists with email: "+email, repository.ErrUserAlreadyExists)
+		r.logger.Error("Registration failed: user already exists", repository.ErrUserAlreadyExists)
 		return false, repository.ErrUserAlreadyExists
 	}
 
@@ -71,7 +71,7 @@ func (r *AccountRepository) Authenticate(email string, password string) (bool, e
 		&user.Password,
 	)
 	if err == sql.ErrNoRows {
-		r.logger.Error("User not found for email: "+email, nil)
+		r.logger.Error("Authentication failed: user not found", nil)
 		return false, repository.ErrAuthenticationValidation
 	}
 	if err != nil {
@@ -81,7 +81,7 @@ func (r *AccountRepository) Authenticate(email string, password string) (bool, e
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		r.logger.Error("Password mismatch for email: "+email, nil)
+		r.logger.Error("Authentication failed: invalid credentials", nil)
 		return false, repository.ErrAuthenticationValidation
 	}
 

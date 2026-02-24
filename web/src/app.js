@@ -87,7 +87,7 @@ window.app = {
 
     if (name.length < 4) errors.push("Enter your complete name");
     if (email.length < 8) errors.push("Enter a valid email address");
-    if (password.length < 6) errors.push("Password must be at least 6 characters");
+    if (password.length < 8) errors.push("Password must be at least 8 characters");
     if (password != passwordConfirm) errors.push("Passwords don't match");
     if (errors.length == 0) {
       btn.disabled = true;
@@ -120,7 +120,7 @@ window.app = {
     errorEl.textContent = "";
 
     if (email.length < 8) errors.push("Enter a valid email address");
-    if (password.length < 6) errors.push("Password must be at least 6 characters");
+    if (password.length < 8) errors.push("Password must be at least 8 characters");
     if (errors.length == 0) {
       btn.disabled = true;
       btn.classList.add("btn-loading");

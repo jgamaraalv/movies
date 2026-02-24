@@ -141,7 +141,7 @@ func (h *MovieHandler) GetRecommendations(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	email, ok := r.Context().Value("email").(string)
+	email, ok := r.Context().Value(emailContextKey).(string)
 	if !ok {
 		h.writeJSONResponse(w, []interface{}{})
 		return
