@@ -37,6 +37,7 @@ export default class MoviesPage extends HTMLElement {
 
   async loadGenres() {
     const genres = await API.getGenres();
+    if (!genres) return;
 
     while (this._selectFilter.firstChild) {
       this._selectFilter.removeChild(this._selectFilter.firstChild);

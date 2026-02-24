@@ -22,6 +22,8 @@ export default class HomePage extends HTMLElement {
     const [topMovies, randomMovies] = results;
     const recommendations = results[2] || null;
 
+    if (!topMovies || !randomMovies) return;
+
     this._renderMoviesInList(topMovies, this._ulTop10);
     this._renderMoviesInList(randomMovies, this._ulRandom);
 

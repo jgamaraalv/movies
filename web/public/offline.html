@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offline — Moovies</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: 'Source Sans 3', 'Segoe UI', system-ui, sans-serif;
+        background: #0a0a0a;
+        color: #e5e5e5;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 2rem;
+      }
+      .icon {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        opacity: 0.6;
+      }
+      h1 {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 2rem;
+        letter-spacing: 0.04em;
+        margin-bottom: 0.75rem;
+      }
+      p {
+        color: #999;
+        font-size: 1.1rem;
+        max-width: 360px;
+        line-height: 1.5;
+        margin-bottom: 2rem;
+      }
+      button {
+        background: #e50914;
+        color: #fff;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 150ms ease;
+      }
+      button:hover { background: #f6121d; }
+    </style>
+  </head>
+  <body>
+    <div class="icon">&#x1F39E;</div>
+    <h1>You're Offline</h1>
+    <p>It looks like you've lost your internet connection. Check your network and try again.</p>
+    <button onclick="location.reload()">Retry</button>
+  </body>
+</html>

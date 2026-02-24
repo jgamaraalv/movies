@@ -75,9 +75,17 @@ export const API = {
           },
         }
       );
+      if (response.status === 503) {
+        app.showOffline();
+        return;
+      }
       const result = await response.json();
       return result;
     } catch (e) {
+      if (!navigator.onLine) {
+        app.showOffline();
+        return;
+      }
       console.error(e);
     }
   },

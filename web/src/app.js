@@ -20,6 +20,37 @@ window.app = {
   closeError: () => {
     document.getElementById("alert-modal").close();
   },
+  showOffline: () => {
+    const main = document.querySelector("main");
+    while (main.firstChild) main.removeChild(main.firstChild);
+
+    const section = document.createElement("section");
+    section.style.cssText =
+      "display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:2rem";
+
+    const icon = document.createElement("div");
+    icon.style.cssText = "font-size:4rem;margin-bottom:1.5rem;opacity:0.6";
+    icon.textContent = "\u{1F39E}";
+
+    const h2 = document.createElement("h2");
+    h2.style.cssText =
+      "font-family:var(--font-display),sans-serif;font-size:2rem;letter-spacing:0.04em;margin-bottom:0.75rem";
+    h2.textContent = "You're Offline";
+
+    const p = document.createElement("p");
+    p.style.cssText =
+      "color:var(--text-secondary);font-size:1.1rem;max-width:360px;line-height:1.5;margin-bottom:2rem";
+    p.textContent =
+      "It looks like you've lost your internet connection. Check your network and try again.";
+
+    const btn = document.createElement("button");
+    btn.className = "action-btn";
+    btn.textContent = "Retry";
+    btn.addEventListener("click", () => location.reload());
+
+    section.append(icon, h2, p, btn);
+    main.appendChild(section);
+  },
   search: (event) => {
     event.preventDefault();
     const keywords = document.querySelector("input[type=search]").value;
@@ -115,5 +146,9 @@ window.app = {
 
 window.addEventListener("DOMContentLoaded", () => {
   app.Router.init();
-  navigator.serviceWorker.register("/sw.js");
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").catch((err) => {
+      console.error("SW registration failed:", err);
+    });
+  }
 });

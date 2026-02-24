@@ -10,6 +10,7 @@ export default class MovieDetailsPage extends HTMLElement {
     } catch {
       return;
     }
+    if (!this._movie) return;
 
     const template = document.getElementById("template-movie-details");
     const content = template.content.cloneNode(true);

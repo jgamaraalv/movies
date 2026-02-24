@@ -5,6 +5,12 @@ server/database/data
 
 # Build output
 public/
+!web/public/
+web/public/*
+!web/public/sw.js
+!web/public/offline.html
+!web/public/app.webmanifest
+!web/public/images/
 
 # Dependencies
 node_modules/
@@ -12,3 +18,8 @@ web/node_modules/
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+
+skills-lock.json
+.agents
+.claude
+CLAUDE.md
